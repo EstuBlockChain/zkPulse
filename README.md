@@ -1,63 +1,77 @@
 # zkPulse ⚡
 
-**zkPulse** is a gamified network health monitor for the Syscoin ecosystem. It turns blockchain reliability metrics into an interactive experience where users "process packets" to measure network stability.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![SvelteKit](https://img.shields.io/badge/SvelteKit-FF3E00?logo=svelte&logoColor=white)](https://kit.svelte.dev/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
-![zkPulse Game](https://raw.githubusercontent.com/EstuBlockChain/zkPulse/main/FrontEnd/static/favicon.png)
+> **A gamified network health monitor for the Syscoin ecosystem**
+
+**zkPulse** transforms blockchain reliability metrics into an interactive gaming experience where users process packets in real-time, compete on leaderboards, and publish achievements on-chain.
+
+---
 
 ## 🎮 Features
 
-- **Gamified Monitoring:** Visualize network packet processing in real-time.
-- **Dual Leaderboard:** Compete for **Top Scores** and **Highest Reliability**.
-- **Multi-Network Support:** Seamlessly switch between Syscoin Testnet (Tanenbaum) and Mainnet.
-- **On-Chain Publishing:** Save your high scores directly to the blockchain.
-- **Social Sharing:** Show off your reliability rating on X (Twitter).
+- **Gamified Monitoring:** Visualize network packet processing in real-time
+- **Dual Leaderboard:** Compete for **Top Scores** and **Highest Reliability**
+- **Multi-Network Support:** Switch between Syscoin Testnet (Tanenbaum) and Mainnet
+- **On-Chain Publishing:** Save your high scores directly to the blockchain
+- **Social Sharing:** Share your reliability rating on X (Twitter)
 
 ## 🛠️ Technology Stack
 
 - **Framework:** SvelteKit
 - **Styling:** TailwindCSS
-- **Blockchain Interaction:** Wagmi / Viem
-- **Wallet Connection:** Reown AppKit
-- **Network:** Syscoin NEVM
+- **Blockchain:** Wagmi / Viem
+- **Wallet:** Reown AppKit
+- **Network:** Syscoin NEVM (Testnet: 5700 | Mainnet: 57)
 
 ## 🚀 Getting Started
 
-1.  Clone the repository:
-    ```bash
-    git clone https://github.com/EstuBlockChain/zkPulse.git
-    ```
-2.  Install dependencies:
-    ```bash
-    cd FrontEnd
-    npm install
-    ```
-3.  Run the development server:
-    ```bash
-    npm run dev
-    ```
+```bash
+# Clone the repository
+git clone https://github.com/EstuBlockChain/zkPulse.git
+
+# Install dependencies
+cd FrontEnd
+npm install
+
+# Run development server
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### Build for Production
+
+```bash
+npm run build
+npm run preview
+```
+
+## 🎯 Usage
+
+1. **Connect Wallet** - Connect your Syscoin-compatible wallet
+2. **Select Network** - Choose Testnet or Mainnet
+3. **Start Processing** - Begin processing packets
+4. **Compete** - Check leaderboards and track your ranking
+5. **Publish** - Save your best scores on-chain
+6. **Share** - Post your achievements on social media
+
+## 🤝 Contributing
+
+Contributions are welcome! Fork the repo, create a feature branch, and open a Pull Request.
+
+## 📜 License
+
+MIT License - Copyright (c) 2026 zkPulse Team
 
 ---
 
-## 📄 License
+<div align="center">
 
-**MIT License**
+**⚡ Built for the Syscoin ecosystem ⚡**
 
-Copyright (c) 2026 zkPulse Team
+[⭐ Star this repo](https://github.com/EstuBlockChain/zkPulse) • [Report Issues](https://github.com/EstuBlockChain/zkPulse/issues)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+</div>
