@@ -14,6 +14,8 @@
 	let isPublishing = false;
 	let score = 0;
 	let timeLeft = 60; // HU08: Loop de 60 segundos [cite: 173]
+	let txHash: string | null = null;
+	let explorerUrl = '';
 	let gameLoop: any;
 	let spawnLoop: any;
 
@@ -40,9 +42,11 @@
 		// HU07: Inicio sin wallet [cite: 172]
 		isPlaying = true;
 		isFinished = false;
+		isFinished = false;
 		score = 0;
 		timeLeft = 60;
 		spikes = [];
+		txHash = null; // Reset transaction hash on new game
 
 		sounds.playStart();
 
@@ -133,9 +137,15 @@
 		// 2. Publicar On-chain
 		isPublishing = true;
 		try {
-			const txHash = await publishScoreToChain(score);
-			alert(`Transaction sent!\nHash: ${txHash}\n(Waiting for confirmation...)`);
-			// Aquí podríamos mostrar un link al explorer
+			const hash = await publishScoreToChain(score);
+			txHash = hash;
+
+			// Determinar explorador según red
+			if (account.chainId === 5700) {
+				explorerUrl = 'https://tanenbaum.io/tx';
+			} else {
+				explorerUrl = 'https://explorer.syscoin.org/tx'; // Fallback to mainnet explorer
+			}
 		} catch (error: any) {
 			console.error(error);
 			if (error.message && !error.message.includes('User rejected')) {
@@ -279,7 +289,7 @@
 				>
 					RETRY TEST
 				</button>
-				
+
 				<ShareButton {score} reliability={reliabilityScore} />
 
 				<button
@@ -290,6 +300,21 @@
 					{isPublishing ? 'PUBLISHING...' : 'PUBLISH ON-CHAIN'}
 				</button>
 			</div>
+			</div>
+
+			{#if txHash}
+				<div class="mt-6 flex flex-col items-center animate-pulse">
+					<div class="text-green-400 font-bold mb-2">🚀 TRANSACTION SENT!</div>
+					<a 
+						href="{explorerUrl}/{txHash}" 
+						target="_blank" 
+						rel="noopener noreferrer"
+						class="text-xs text-slate-400 hover:text-cyan-400 underline decoration-dashed underline-offset-4"
+					>
+						VIEW ON EXPLORER ↗
+					</a>
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>
