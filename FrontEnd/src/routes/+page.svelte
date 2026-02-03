@@ -7,6 +7,7 @@
 	import { wagmiAdapter, modal } from '$lib/web3';
 	import { publishScoreToChain } from '$lib/contract';
 	import ShareButton from '$lib/components/ShareButton.svelte';
+	import Leaderboard from '$lib/components/Leaderboard.svelte';
 
 	// -- ESTADO DEL JUEGO --
 	let isPlaying = false;
@@ -252,6 +253,10 @@
 					<div class="mb-1 text-xs tracking-wider text-slate-500">RELIABILITY</div>
 					<div class="text-3xl font-bold text-cyan-400">{reliabilityScore}</div>
 				</div>
+			</div>
+
+			<div class="mb-8 w-full max-w-md">
+				<Leaderboard />
 			</div>
 
 			<button
