@@ -1,9 +1,11 @@
-import { getAccount, readContract, writeContract, waitForTransactionReceipt } from '@wagmi/core';
-import { wagmiAdapter } from './web3';
-import { syscoinTestnet } from './web3';
+import { getAccount, writeContract } from '@wagmi/core';
+import { wagmiAdapter, syscoinTestnet, syscoinMainnet } from './web3';
 
-// TODO: Reemplazar con la dirección real del contrato desplegado
-export const CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
+// Configuración de contratos por red
+export const CONTRACT_CONFIG: Record<number, `0x${string}`> = {
+    [syscoinTestnet.id]: '0x0000000000000000000000000000000000000000', // TODO: Address Testnet
+    [syscoinMainnet.id]: '0x0000000000000000000000000000000000000000', // TODO: Address Mainnet
+};
 
 // ABI mínima para la función publishScore
 export const CONTRACT_ABI = [
@@ -26,16 +28,22 @@ export async function publishScoreToChain(score: number): Promise<string> {
     try {
         const account = getAccount(wagmiAdapter.wagmiConfig);
 
-        if (!account.isConnected) {
+        if (!account.isConnected || !account.chainId) {
             throw new Error('Wallet not connected');
         }
 
+        const contractAddress = CONTRACT_CONFIG[account.chainId];
+
+        if (!contractAddress) {
+            throw new Error(`Network not supported. Please switch to Syscoin.`);
+        }
+
         const hash = await writeContract(wagmiAdapter.wagmiConfig, {
-            address: CONTRACT_ADDRESS,
+            address: contractAddress as `0x${string}`,
             abi: CONTRACT_ABI,
             functionName: 'publishScore',
             args: [BigInt(score)],
-            chainId: syscoinTestnet.id
+            chainId: account.chainId
         });
 
         return hash;

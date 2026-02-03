@@ -6,6 +6,7 @@
 	import { getAccount } from '@wagmi/core';
 	import { wagmiAdapter, modal } from '$lib/web3';
 	import { publishScoreToChain } from '$lib/contract';
+	import ShareButton from '$lib/components/ShareButton.svelte';
 
 	// -- ESTADO DEL JUEGO --
 	let isPlaying = false;
@@ -278,6 +279,9 @@
 				>
 					RETRY TEST
 				</button>
+				
+				<ShareButton {score} reliability={reliabilityScore} />
+
 				<button
 					on:click={handlePublish}
 					disabled={isPublishing}

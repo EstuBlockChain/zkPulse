@@ -21,8 +21,21 @@ export const syscoinTestnet = defineChain({
     testnet: true
 })
 
+export const syscoinMainnet = defineChain({
+    id: 57,
+    name: 'Syscoin Mainnet',
+    nativeCurrency: { name: 'Syscoin', symbol: 'SYS', decimals: 18 },
+    rpcUrls: {
+        default: { http: ['https://rpc.syscoin.org'] }
+    },
+    blockExplorers: {
+        default: { name: 'Syscoin Explorer', url: 'https://syscoin.org' }
+    },
+    testnet: false
+})
+
 // @ts-ignore
-export const networks = [syscoinTestnet, mainnet]
+export const networks = [syscoinTestnet, syscoinMainnet, mainnet]
 
 export const wagmiAdapter = new WagmiAdapter({
     projectId,
@@ -36,7 +49,7 @@ export let modal: any;
 if (typeof window !== 'undefined') {
     modal = createAppKit({
         adapters: [wagmiAdapter],
-        networks,
+        networks: networks as any,
         projectId,
         metadata: {
             name: 'zkPulse',
