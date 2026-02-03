@@ -1,6 +1,6 @@
 # zkPulse ⚡
 
-**zkPulse** is a gamified network health monitor for the Syscoin ecosystem. It turns blockchain reliability metrics into an interactive experience where users "process packets" to measure network stability.
+**zkPulse** is a gamified network health monitor for the Syscoin ecosystem. It turns blockchain reliability metrics into an interactive experience where users "process packets" to measure network stab[...] 
 
 ## 🎮 Features
 
@@ -37,6 +37,8 @@
 ---
 
 ## 📄 License
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **MIT License**
 
