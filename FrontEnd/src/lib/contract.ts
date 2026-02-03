@@ -3,7 +3,7 @@ import { wagmiAdapter, syscoinTestnet, syscoinMainnet } from './web3';
 
 // Configuración de contratos por red
 export const CONTRACT_CONFIG: Record<number, `0x${string}`> = {
-    [syscoinTestnet.id]: '0x0000000000000000000000000000000000000000', // TODO: Address Testnet
+    [syscoinTestnet.id]: '0x73cb147bF953c55139d21D4121Db0Acce2adf4e2', // TODO: Address Testnet
     [syscoinMainnet.id]: '0x0000000000000000000000000000000000000000', // TODO: Address Mainnet
 };
 
