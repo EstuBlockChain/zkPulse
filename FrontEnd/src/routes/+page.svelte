@@ -266,10 +266,10 @@
 
 	{#if isFinished}
 		<div
-			class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md"
+			class="absolute inset-0 z-30 flex flex-col items-center justify-start overflow-y-auto bg-slate-950/90 py-10 backdrop-blur-md"
 			in:fade
 		>
-			<div class="mb-2 text-sm tracking-[0.2em] text-cyan-500">DIAGNOSTIC COMPLETE</div>
+			<div class="mt-10 mb-2 text-sm tracking-[0.2em] text-cyan-500">DIAGNOSTIC COMPLETE</div>
 			<h2 class="mb-2 text-7xl font-black text-white drop-shadow-lg">{score} PTS</h2>
 
 			<div class="mb-8 flex gap-8 text-center opacity-80">

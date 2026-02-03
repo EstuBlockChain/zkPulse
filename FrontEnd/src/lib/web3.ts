@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
         metadata: {
             name: 'zkPulse',
             description: 'Network Health Monitor',
-            url: 'https://zkpulse.app',
+            url: 'https://zkpulse.onrender.com',
             icons: ['https://avatars.githubusercontent.com/u/37784886']
         },
         features: {
