@@ -3,10 +3,14 @@
 	import { fade, scale } from 'svelte/transition';
 	import { userStats, calculateReliability } from '$lib/store';
 	import { sounds } from '$lib/audio';
+	import { getAccount } from '@wagmi/core';
+	import { wagmiAdapter, modal } from '$lib/web3';
+	import { publishScoreToChain } from '$lib/contract';
 
 	// -- ESTADO DEL JUEGO --
 	let isPlaying = false;
 	let isFinished = false;
+	let isPublishing = false;
 	let score = 0;
 	let timeLeft = 60; // HU08: Loop de 60 segundos [cite: 173]
 	let gameLoop: any;
@@ -111,6 +115,34 @@
 
 		// Guardar resultado
 		userStats.addRun(score);
+	}
+
+	async function handlePublish() {
+		if (isPublishing) return;
+
+		// 1. Lazy Connect: Verificar si está conectado
+		const account = getAccount(wagmiAdapter.wagmiConfig);
+		if (!account.isConnected) {
+			if (modal) {
+				await modal.open();
+			}
+			return;
+		}
+
+		// 2. Publicar On-chain
+		isPublishing = true;
+		try {
+			const txHash = await publishScoreToChain(score);
+			alert(`Transaction sent!\nHash: ${txHash}\n(Waiting for confirmation...)`);
+			// Aquí podríamos mostrar un link al explorer
+		} catch (error: any) {
+			console.error(error);
+			if (error.message && !error.message.includes('User rejected')) {
+				alert('Error publishing score. See console.');
+			}
+		} finally {
+			isPublishing = false;
+		}
 	}
 
 	onDestroy(() => {
@@ -247,9 +279,11 @@
 					RETRY TEST
 				</button>
 				<button
-					class="bg-cyan-500 px-6 py-3 font-bold text-black shadow-[0_0_15px_rgba(34,211,238,0.4)] hover:bg-cyan-400"
+					on:click={handlePublish}
+					disabled={isPublishing}
+					class="bg-cyan-500 px-6 py-3 font-bold text-black shadow-[0_0_15px_rgba(34,211,238,0.4)] hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
 				>
-					PUBLISH ON-CHAIN
+					{isPublishing ? 'PUBLISHING...' : 'PUBLISH ON-CHAIN'}
 				</button>
 			</div>
 		</div>
