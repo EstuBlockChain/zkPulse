@@ -2,8 +2,6 @@
 
 **zkPulse** is a gamified network health monitor for the Syscoin ecosystem. It turns blockchain reliability metrics into an interactive experience where users "process packets" to measure network stability.
 
-![zkPulse Game](https://raw.githubusercontent.com/EstuBlockChain/zkPulse/main/FrontEnd/static/favicon.png)
-
 ## 🎮 Features
 
 - **Gamified Monitoring:** Visualize network packet processing in real-time.
