@@ -13,7 +13,7 @@ export const syscoinTestnet = defineChain({
     name: 'Syscoin Tanenbaum',
     nativeCurrency: { name: 'Syscoin', symbol: 'tSYS', decimals: 18 },
     rpcUrls: {
-        default: { http: ['https://rpc.tanenbaum.io'] }
+        default: { http: ['https://rpc.tanenbaum.io', 'https://syscoin-tanenbaum-evm.publicnode.com'] }
     },
     blockExplorers: {
         default: { name: 'Syscoin Explorer', url: 'https://tanenbaum.io' }
