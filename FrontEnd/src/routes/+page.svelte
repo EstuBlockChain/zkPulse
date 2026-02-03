@@ -255,10 +255,6 @@
 				</div>
 			</div>
 
-			<div class="mb-8 w-full max-w-md">
-				<Leaderboard />
-			</div>
-
 			<button
 				on:click={startGame}
 				class="clip-path-polygon bg-cyan-500 px-10 py-4 text-xl font-bold tracking-widest text-black shadow-[0_0_20px_rgba(34,211,238,0.5)] transition-all hover:scale-105 hover:bg-cyan-400"
@@ -319,6 +315,10 @@
 					</a>
 				</div>
 			{/if}
+
+			<div class="mt-8 w-full max-w-md">
+				<Leaderboard />
+			</div>
 		</div>
 	{/if}
 </div>
