@@ -43,7 +43,8 @@ export async function publishScoreToChain(score: number): Promise<string> {
             abi: CONTRACT_ABI,
             functionName: 'publishScore',
             args: [BigInt(score)],
-            chainId: account.chainId
+            chainId: account.chainId,
+            gas: 300000n, // Force higher gas limit for Pali Wallet compatibility
         });
 
         return hash;
