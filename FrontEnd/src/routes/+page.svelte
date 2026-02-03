@@ -305,16 +305,15 @@
 					{isPublishing ? 'PUBLISHING...' : 'PUBLISH ON-CHAIN'}
 				</button>
 			</div>
-			</div>
 
 			{#if txHash}
-				<div class="mt-6 flex flex-col items-center animate-pulse">
-					<div class="text-green-400 font-bold mb-2">🚀 TRANSACTION SENT!</div>
-					<a 
-						href="{explorerUrl}/{txHash}" 
-						target="_blank" 
+				<div class="mt-6 flex animate-pulse flex-col items-center">
+					<div class="mb-2 font-bold text-green-400">🚀 TRANSACTION SENT!</div>
+					<a
+						href="{explorerUrl}/{txHash}"
+						target="_blank"
 						rel="noopener noreferrer"
-						class="text-xs text-slate-400 hover:text-cyan-400 underline decoration-dashed underline-offset-4"
+						class="text-xs text-slate-400 underline decoration-dashed underline-offset-4 hover:text-cyan-400"
 					>
 						VIEW ON EXPLORER ↗
 					</a>
