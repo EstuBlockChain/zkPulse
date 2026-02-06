@@ -1,10 +1,9 @@
 import { getAccount, writeContract } from '@wagmi/core';
-import { wagmiAdapter, syscoinTestnet, syscoinMainnet } from './web3';
+import { wagmiAdapter, zkSysPoBDevnet } from './web3';
 
 // Configuración de contratos por red
 export const CONTRACT_CONFIG: Record<number, `0x${string}`> = {
-    [syscoinTestnet.id]: '0x73cb147bF953c55139d21D4121Db0Acce2adf4e2', // TODO: Address Testnet
-    [syscoinMainnet.id]: '0x0000000000000000000000000000000000000000', // TODO: Address Mainnet
+    [zkSysPoBDevnet.id]: '0x9CB357A29d2256d2B54889DC2Df936BD197ffA53',
 };
 
 // ABI mínima para la función publishScore

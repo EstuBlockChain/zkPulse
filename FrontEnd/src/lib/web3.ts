@@ -1,5 +1,4 @@
 import { createAppKit } from '@reown/appkit'
-import { mainnet } from '@reown/appkit/networks'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { defineChain } from 'viem'
 
@@ -8,34 +7,21 @@ import { defineChain } from 'viem'
 // (Pero cámbialo pronto porque tiene límites)
 export const projectId = 'c6433317029634d37e2f5da53e1d7617'
 
-export const syscoinTestnet = defineChain({
-    id: 5700,
-    name: 'Syscoin Tanenbaum',
-    nativeCurrency: { name: 'Syscoin', symbol: 'tSYS', decimals: 18 },
+export const zkSysPoBDevnet = defineChain({
+    id: 57042,
+    name: 'zkSYS PoB Devnet',
+    nativeCurrency: { name: 'Syscoin', symbol: 'TSYS', decimals: 18 },
     rpcUrls: {
-        default: { http: ['https://rpc.tanenbaum.io', 'https://syscoin-tanenbaum-evm.publicnode.com'] }
+        default: { http: ['https://rpc-pob.dev11.top'] }
     },
     blockExplorers: {
-        default: { name: 'Syscoin Explorer', url: 'https://tanenbaum.io' }
+        default: { name: 'zkSYS Explorer', url: 'https://explorer-pob.dev11.top/' }
     },
     testnet: true
 })
 
-export const syscoinMainnet = defineChain({
-    id: 57,
-    name: 'Syscoin Mainnet',
-    nativeCurrency: { name: 'Syscoin', symbol: 'SYS', decimals: 18 },
-    rpcUrls: {
-        default: { http: ['https://rpc.syscoin.org'] }
-    },
-    blockExplorers: {
-        default: { name: 'Syscoin Explorer', url: 'https://syscoin.org' }
-    },
-    testnet: false
-})
-
 // @ts-ignore
-export const networks = [syscoinTestnet, syscoinMainnet, mainnet]
+export const networks = [zkSysPoBDevnet]
 
 export const wagmiAdapter = new WagmiAdapter({
     projectId,
