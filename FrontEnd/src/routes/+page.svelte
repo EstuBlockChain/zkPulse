@@ -4,7 +4,7 @@
 	import { userStats, calculateReliability } from '$lib/store';
 	import { sounds } from '$lib/audio';
 	import { getAccount } from '@wagmi/core';
-	import { wagmiAdapter, modal } from '$lib/web3';
+	import { wagmiAdapter, modal, zkSysPoBDevnet } from '$lib/web3';
 	import { publishScoreToChain } from '$lib/contract';
 	import ShareButton from '$lib/components/ShareButton.svelte';
 	import Leaderboard from '$lib/components/Leaderboard.svelte';
@@ -142,7 +142,9 @@
 			txHash = hash;
 
 			// Determinar explorador según red
-			if (account.chainId === 5700) {
+			if (account.chainId === zkSysPoBDevnet.id) {
+				explorerUrl = 'https://explorer-pob.dev11.top/tx';
+			} else if (account.chainId === 5700) {
 				explorerUrl = 'https://tanenbaum.io/tx';
 			} else {
 				explorerUrl = 'https://explorer.syscoin.org/tx'; // Fallback to mainnet explorer
