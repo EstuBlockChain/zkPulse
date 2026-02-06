@@ -1,4 +1,4 @@
-import { getAccount, writeContract } from '@wagmi/core';
+import { getAccount, writeContract, switchChain } from '@wagmi/core';
 import { wagmiAdapter, zkSysPoBDevnet, syscoinTestnet, syscoinMainnet } from './web3';
 
 // Configuración de contratos por red
@@ -31,10 +31,19 @@ export async function publishScoreToChain(score: number): Promise<string> {
             throw new Error('Wallet not connected');
         }
 
-        const contractAddress = CONTRACT_CONFIG[account.chainId];
+        let contractAddress = CONTRACT_CONFIG[account.chainId];
+        let targetChainId = account.chainId;
 
+        // Auto-switch network if not on the supported chain
         if (!contractAddress) {
-            throw new Error(`Network not supported. Please switch to Syscoin.`);
+            try {
+                await switchChain(wagmiAdapter.wagmiConfig, { chainId: zkSysPoBDevnet.id });
+                contractAddress = CONTRACT_CONFIG[zkSysPoBDevnet.id];
+                targetChainId = zkSysPoBDevnet.id;
+            } catch (switchError) {
+                console.error('Failed to switch network:', switchError);
+                throw new Error('Please switch to zkSYS PoB Devnet to publish your score.');
+            }
         }
 
         const hash = await writeContract(wagmiAdapter.wagmiConfig, {
@@ -42,7 +51,7 @@ export async function publishScoreToChain(score: number): Promise<string> {
             abi: CONTRACT_ABI,
             functionName: 'publishScore',
             args: [BigInt(score)],
-            chainId: account.chainId,
+            chainId: targetChainId,
             // gas: 300000n, // Removed hardcoded gas limit to allow auto-estimation on zkSYS
         });
 
