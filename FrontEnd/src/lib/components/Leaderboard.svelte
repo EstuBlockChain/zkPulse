@@ -2,26 +2,15 @@
 	import { fade } from 'svelte/transition';
 
 	// Props
-	export let scores: { address: string; value: number }[] = [];
+	export let scores: { address: string; value: number; reliability: number }[] = [];
+	export let userAddress: string | undefined = undefined;
 
-	// Mock Data para simular la HU13 (Reliability mock se mantiene por ahora)
-	/* const mockScores = [
-		{ address: '0x1A2...3B4C', value: 2450 },
-		{ address: '0x8B7...9C2D', value: 2100 },
-		{ address: '0x4D5...1E8F', value: 1850 },
-		{ address: '0x9E2...7A3B', value: 1720 },
-		{ address: '0x3C4...5D6E', value: 1540 }
-	]; */
+	let activeTab: 'score' | 'history' = 'score';
 
-	const mockReliability = [
-		{ address: '0x2F1...8A9B', value: '99%' },
-		{ address: '0x5C6...2D4E', value: '98%' },
-		{ address: '0x7E3...1B5A', value: '97%' },
-		{ address: '0x0A9...4C2D', value: '96%' },
-		{ address: '0x4D5...1E8F', value: '95%' }
-	];
-
-	let activeTab: 'score' | 'reliability' = 'score';
+	// Computed
+	$: myHistory = userAddress
+		? scores.filter((s) => s.address.toLowerCase() === userAddress?.toLowerCase())
+		: [];
 </script>
 
 <div class="w-full max-w-md border border-cyan-900/50 bg-slate-900/50 p-4 backdrop-blur-sm">
@@ -37,12 +26,12 @@
 		</button>
 		<button
 			class="flex-1 py-2 text-xs font-bold tracking-widest transition-colors {activeTab ===
-			'reliability'
+			'history'
 				? 'border-b-2 border-cyan-400 bg-cyan-500/10 text-cyan-400'
 				: 'text-slate-500 hover:text-cyan-200'}"
-			on:click={() => (activeTab = 'reliability')}
+			on:click={() => (activeTab = 'history')}
 		>
-			RELIABILITY
+			MY HISTORY
 		</button>
 	</div>
 
@@ -50,11 +39,21 @@
 	<div class="flex flex-col gap-2">
 		{#if activeTab === 'score'}
 			<div in:fade={{ duration: 200 }}>
-				{#each scores as item, i}
+				<!-- Show Top 5 from the list passed in (assuming it is sorted) -->
+				{#each scores.slice(0, 5) as item, i}
 					<div class="flex items-center justify-between border-b border-white/5 py-2 text-sm">
 						<div class="flex items-center gap-3">
 							<span class="w-4 text-xs font-bold text-slate-500">#{i + 1}</span>
-							<span class="font-mono text-cyan-100">{item.address}</span>
+							<div class="flex flex-col">
+								<span class="font-mono text-cyan-100">{item.address}</span>
+								<!-- Reliability Indicator -->
+								<div class="flex items-center gap-1">
+									<div class="h-1 w-10 overflow-hidden rounded-full bg-slate-800">
+										<div class="h-full bg-cyan-500" style="width: {item.reliability}%"></div>
+									</div>
+									<span class="text-[0.6rem] text-slate-400">{item.reliability}%</span>
+								</div>
+							</div>
 						</div>
 						<span class="font-bold text-cyan-400">{item.value} PTS</span>
 					</div>
@@ -62,15 +61,22 @@
 			</div>
 		{:else}
 			<div in:fade={{ duration: 200 }}>
-				{#each mockReliability as item, i}
-					<div class="flex items-center justify-between border-b border-white/5 py-2 text-sm">
-						<div class="flex items-center gap-3">
-							<span class="w-4 text-xs font-bold text-slate-500">#{i + 1}</span>
-							<span class="font-mono text-cyan-100">{item.address}</span>
+				{#if myHistory.length === 0}
+					<div class="py-8 text-center text-xs text-slate-500">NO HISTORY FOUND</div>
+				{:else}
+					{#each myHistory.slice(0, 10) as item, i}
+						<div class="flex items-center justify-between border-b border-white/5 py-2 text-sm">
+							<div class="flex items-center gap-3">
+								<span class="w-4 text-xs font-bold text-slate-500"></span>
+								<div class="flex flex-col">
+									<span class="font-mono text-cyan-100">RUN #{myHistory.length - i}</span>
+									<span class="text-[0.6rem] text-slate-400">Reliability: {item.reliability}%</span>
+								</div>
+							</div>
+							<span class="font-bold text-white">{item.value} PTS</span>
 						</div>
-						<span class="font-bold text-green-400">{item.value}</span>
-					</div>
-				{/each}
+					{/each}
+				{/if}
 			</div>
 		{/if}
 	</div>

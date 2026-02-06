@@ -20,7 +20,7 @@
 	let gameLoop: any;
 	let spawnLoop: any;
 	let totalGames: string = '--';
-	let leaderboardData: { address: string; value: number }[] = [];
+	let leaderboardData: { address: string; value: number; reliability: number }[] = [];
 
 	// Métricas reactivas
 	$: reliabilityScore = calculateReliability($userStats);
@@ -47,11 +47,11 @@
 		// Format and sort leaderboard (high to low)
 		leaderboardData = rawLeaderboard
 			.map((item) => ({
-				address: `${item.player.slice(0, 6)}...${item.player.slice(-4)}`,
-				value: Number(item.score)
+				address: item.player,
+				value: Number(item.score),
+				reliability: Number(item.reliability)
 			}))
-			.sort((a, b) => b.value - a.value)
-			.slice(0, 5); // Take top 5
+			.sort((a, b) => b.value - a.value);
 	});
 
 	// -- LÓGICA DEL JUEGO --
@@ -155,7 +155,7 @@
 		// 2. Publicar On-chain
 		isPublishing = true;
 		try {
-			const hash = await submitScoreToChain(score);
+			const hash = await submitScoreToChain(score, Math.round(reliabilityScore));
 			txHash = hash;
 
 			// Determinar explorador según red
@@ -173,11 +173,11 @@
 				const rawLeaderboard = await fetchLeaderboard();
 				leaderboardData = rawLeaderboard
 					.map((item) => ({
-						address: `${item.player.slice(0, 6)}...${item.player.slice(-4)}`,
-						value: Number(item.score)
+						address: item.player,
+						value: Number(item.score),
+						reliability: Number(item.reliability)
 					}))
-					.sort((a, b) => b.value - a.value)
-					.slice(0, 5);
+					.sort((a, b) => b.value - a.value);
 			}, 5000); // Wait a bit for block propagation
 		} catch (error: any) {
 			console.error(error);
@@ -348,7 +348,10 @@
 			{/if}
 
 			<div class="mt-8 w-full max-w-md">
-				<Leaderboard scores={leaderboardData} />
+				<Leaderboard
+					scores={leaderboardData}
+					userAddress={getAccount(wagmiAdapter.wagmiConfig).address}
+				/>
 			</div>
 		</div>
 	{/if}

@@ -3,16 +3,21 @@ import { wagmiAdapter, zkSysPoBDevnet, syscoinTestnet, syscoinMainnet } from './
 
 // Configuración de contratos por red
 export const CONTRACT_CONFIG: Record<number, `0x${string}`> = {
-    [zkSysPoBDevnet.id]: '0x1d102B1e3aA534b4799285A6a5Aa50f942B97A87',
+    [zkSysPoBDevnet.id]: '0x01A7dE356dc745dD48229A3Bf7622100559677ae',
 };
 
-// ABI del contrato Leaderboard
+// ABI del contrato Leaderboard v2 (con Reliability)
 export const CONTRACT_ABI = [
     {
         "inputs": [
             {
                 "internalType": "uint256",
                 "name": "_score",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_reliability",
                 "type": "uint256"
             }
         ],
@@ -35,6 +40,11 @@ export const CONTRACT_ABI = [
                     {
                         "internalType": "uint256",
                         "name": "score",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "reliability",
                         "type": "uint256"
                     },
                     {
@@ -63,16 +73,36 @@ export const CONTRACT_ABI = [
         ],
         "stateMutability": "view",
         "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "bestScores",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
     }
 ] as const;
 
 export type PlayerScore = {
     player: `0x${string}`;
     score: bigint;
+    reliability: bigint;
     timestamp: bigint;
 };
 
-export async function submitScoreToChain(score: number): Promise<string> {
+export async function submitScoreToChain(score: number, reliability: number): Promise<string> {
     try {
         const account = getAccount(wagmiAdapter.wagmiConfig);
 
@@ -99,7 +129,7 @@ export async function submitScoreToChain(score: number): Promise<string> {
             address: contractAddress as `0x${string}`,
             abi: CONTRACT_ABI,
             functionName: 'submitScore',
-            args: [BigInt(score)],
+            args: [BigInt(score), BigInt(reliability)],
             chainId: targetChainId,
         });
 
@@ -128,7 +158,6 @@ export async function fetchLeaderboard(): Promise<PlayerScore[]> {
             functionName: 'getLeaderboard',
             chainId: zkSysPoBDevnet.id
         });
-        // result is strictly typed as readonly tuple array based on const ABI, cast or map if needed
         return result as unknown as PlayerScore[];
     } catch (error) {
         console.error('Error reading leaderboard:', error);
@@ -147,6 +176,22 @@ export async function fetchTotalGames(): Promise<string> {
         return result.toString();
     } catch (error) {
         console.error('Error reading total games:', error);
+        return '--';
+    }
+}
+
+export async function fetchPersonalBest(address: `0x${string}`): Promise<string> {
+    try {
+        const result = await readContract(wagmiAdapter.wagmiConfig, {
+            address: CONTRACT_CONFIG[zkSysPoBDevnet.id],
+            abi: CONTRACT_ABI,
+            functionName: 'bestScores',
+            args: [address],
+            chainId: zkSysPoBDevnet.id
+        });
+        return result.toString();
+    } catch (error) {
+        console.error('Error reading personal best:', error);
         return '--';
     }
 }
