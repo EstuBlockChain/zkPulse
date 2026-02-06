@@ -43,12 +43,14 @@ export async function publishScoreToChain(score: number): Promise<string> {
             functionName: 'publishScore',
             args: [BigInt(score)],
             chainId: account.chainId,
-            gas: 300000n, // Force higher gas limit for Pali Wallet compatibility
+            // gas: 300000n, // Removed hardcoded gas limit to allow auto-estimation on zkSYS
         });
 
         return hash;
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error publishing score:', error);
+        // Show clearer error to user
+        alert(`Error publishing score: ${error.message || error}`);
         throw error;
     }
 }
