@@ -3,27 +3,57 @@ import { wagmiAdapter, zkSysPoBDevnet, syscoinTestnet, syscoinMainnet } from './
 
 // Configuración de contratos por red
 export const CONTRACT_CONFIG: Record<number, `0x${string}`> = {
-    [zkSysPoBDevnet.id]: '0x9CB357A29d2256d2B54889DC2Df936BD197ffA53',
+    [zkSysPoBDevnet.id]: '0x1d102B1e3aA534b4799285A6a5Aa50f942B97A87',
 };
 
-// ABI del contrato Storage
+// ABI del contrato Leaderboard
 export const CONTRACT_ABI = [
     {
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "num",
+                "name": "_score",
                 "type": "uint256"
             }
         ],
-        "name": "store",
+        "name": "submitScore",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
         "inputs": [],
-        "name": "retrieve",
+        "name": "getLeaderboard",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "player",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "score",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "timestamp",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct Leaderboard.PlayerScore[]",
+                "name": "",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getTotalGames",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -36,7 +66,13 @@ export const CONTRACT_ABI = [
     }
 ] as const;
 
-export async function publishScoreToChain(score: number): Promise<string> {
+export type PlayerScore = {
+    player: `0x${string}`;
+    score: bigint;
+    timestamp: bigint;
+};
+
+export async function submitScoreToChain(score: number): Promise<string> {
     try {
         const account = getAccount(wagmiAdapter.wagmiConfig);
 
@@ -62,7 +98,7 @@ export async function publishScoreToChain(score: number): Promise<string> {
         const hash = await writeContract(wagmiAdapter.wagmiConfig, {
             address: contractAddress as `0x${string}`,
             abi: CONTRACT_ABI,
-            functionName: 'store', // Updated to 'store'
+            functionName: 'submitScore',
             args: [BigInt(score)],
             chainId: targetChainId,
         });
@@ -84,17 +120,33 @@ export async function publishScoreToChain(score: number): Promise<string> {
     }
 }
 
-export async function readLastScore(): Promise<string> {
+export async function fetchLeaderboard(): Promise<PlayerScore[]> {
     try {
         const result = await readContract(wagmiAdapter.wagmiConfig, {
             address: CONTRACT_CONFIG[zkSysPoBDevnet.id],
             abi: CONTRACT_ABI,
-            functionName: 'retrieve',
+            functionName: 'getLeaderboard',
+            chainId: zkSysPoBDevnet.id
+        });
+        // result is strictly typed as readonly tuple array based on const ABI, cast or map if needed
+        return result as unknown as PlayerScore[];
+    } catch (error) {
+        console.error('Error reading leaderboard:', error);
+        return [];
+    }
+}
+
+export async function fetchTotalGames(): Promise<string> {
+    try {
+        const result = await readContract(wagmiAdapter.wagmiConfig, {
+            address: CONTRACT_CONFIG[zkSysPoBDevnet.id],
+            abi: CONTRACT_ABI,
+            functionName: 'getTotalGames',
             chainId: zkSysPoBDevnet.id
         });
         return result.toString();
     } catch (error) {
-        console.error('Error reading contract:', error);
+        console.error('Error reading total games:', error);
         return '--';
     }
 }

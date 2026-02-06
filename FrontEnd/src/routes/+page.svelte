@@ -5,7 +5,7 @@
 	import { sounds } from '$lib/audio';
 	import { getAccount } from '@wagmi/core';
 	import { wagmiAdapter, modal, zkSysPoBDevnet } from '$lib/web3';
-	import { publishScoreToChain, readLastScore } from '$lib/contract';
+	import { submitScoreToChain, fetchLeaderboard, fetchTotalGames } from '$lib/contract';
 	import ShareButton from '$lib/components/ShareButton.svelte';
 	import Leaderboard from '$lib/components/Leaderboard.svelte';
 
@@ -19,7 +19,8 @@
 	let explorerUrl = '';
 	let gameLoop: any;
 	let spawnLoop: any;
-	let lastStoredScore: string = '--';
+	let totalGames: string = '--';
+	let leaderboardData: { address: string; value: number }[] = [];
 
 	// Métricas reactivas
 	$: reliabilityScore = calculateReliability($userStats);
@@ -39,8 +40,18 @@
 	let nextId = 0;
 
 	onMount(async () => {
-		// Read last score from contract on load
-		lastStoredScore = await readLastScore();
+		// Fetch initial data
+		totalGames = await fetchTotalGames();
+
+		const rawLeaderboard = await fetchLeaderboard();
+		// Format and sort leaderboard (high to low)
+		leaderboardData = rawLeaderboard
+			.map((item) => ({
+				address: `${item.player.slice(0, 6)}...${item.player.slice(-4)}`,
+				value: Number(item.score)
+			}))
+			.sort((a, b) => b.value - a.value)
+			.slice(0, 5); // Take top 5
 	});
 
 	// -- LÓGICA DEL JUEGO --
@@ -144,7 +155,7 @@
 		// 2. Publicar On-chain
 		isPublishing = true;
 		try {
-			const hash = await publishScoreToChain(score);
+			const hash = await submitScoreToChain(score);
 			txHash = hash;
 
 			// Determinar explorador según red
@@ -156,9 +167,17 @@
 				explorerUrl = 'https://explorer.syscoin.org/tx'; // Fallback to mainnet explorer
 			}
 
-			// Update last score after successful publish
+			// Update leaderboard and stats after successful publish
 			setTimeout(async () => {
-				lastStoredScore = await readLastScore();
+				totalGames = await fetchTotalGames();
+				const rawLeaderboard = await fetchLeaderboard();
+				leaderboardData = rawLeaderboard
+					.map((item) => ({
+						address: `${item.player.slice(0, 6)}...${item.player.slice(-4)}`,
+						value: Number(item.score)
+					}))
+					.sort((a, b) => b.value - a.value)
+					.slice(0, 5);
 			}, 5000); // Wait a bit for block propagation
 		} catch (error: any) {
 			console.error(error);
@@ -193,7 +212,7 @@
 			</div>
 
 			<div class="mt-4 text-xs text-slate-500">
-				<p>LAST STORED SCORE: <span class="text-cyan-600">{lastStoredScore}</span></p>
+				<p>TOTAL GAMES PLAYED: <span class="text-cyan-600">{totalGames}</span></p>
 			</div>
 		</div>
 
@@ -329,7 +348,7 @@
 			{/if}
 
 			<div class="mt-8 w-full max-w-md">
-				<Leaderboard />
+				<Leaderboard scores={leaderboardData} />
 			</div>
 		</div>
 	{/if}
