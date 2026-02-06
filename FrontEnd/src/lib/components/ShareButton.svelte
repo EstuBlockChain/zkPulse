@@ -3,7 +3,7 @@
 	export let reliability: number | string = 'N/A';
 
 	// HU21: Twitter intent URL construction
-	$: tweetText = `I just processed ${score} packets on zkPulse with ${reliability} reliability! 🚀 Can you beat my score? #zkPulse #Syscoin #Gaming`;
+	$: tweetText = `I just processed ${score} packets on zkPulse with ${reliability} reliability! 🚀 Can you beat my score? @zkPulse135 #zkPulse #Syscoin #Gaming`;
 	$: shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
 </script>
 
