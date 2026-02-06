@@ -5,7 +5,7 @@
 	import { sounds } from '$lib/audio';
 	import { getAccount } from '@wagmi/core';
 	import { wagmiAdapter, modal, zkSysPoBDevnet } from '$lib/web3';
-	import { publishScoreToChain } from '$lib/contract';
+	import { publishScoreToChain, readLastScore } from '$lib/contract';
 	import ShareButton from '$lib/components/ShareButton.svelte';
 	import Leaderboard from '$lib/components/Leaderboard.svelte';
 
@@ -19,6 +19,7 @@
 	let explorerUrl = '';
 	let gameLoop: any;
 	let spawnLoop: any;
+	let lastStoredScore: string = '--';
 
 	// Métricas reactivas
 	$: reliabilityScore = calculateReliability($userStats);
@@ -36,6 +37,11 @@
 
 	let spikes: Spike[] = [];
 	let nextId = 0;
+
+	onMount(async () => {
+		// Read last score from contract on load
+		lastStoredScore = await readLastScore();
+	});
 
 	// -- LÓGICA DEL JUEGO --
 
@@ -149,6 +155,11 @@
 			} else {
 				explorerUrl = 'https://explorer.syscoin.org/tx'; // Fallback to mainnet explorer
 			}
+
+			// Update last score after successful publish
+			setTimeout(async () => {
+				lastStoredScore = await readLastScore();
+			}, 5000); // Wait a bit for block propagation
 		} catch (error: any) {
 			console.error(error);
 			if (error.message && !error.message.includes('User rejected')) {
@@ -180,10 +191,9 @@
 				></div>
 				<span class="text-xs text-slate-400">{isPlaying ? 'LIVE TRAFFIC' : 'SYSTEM IDLE'}</span>
 			</div>
-			<!-- Mock de estadisticas globales por ahora -->
+
 			<div class="mt-4 text-xs text-slate-500">
-				<p>GLOBAL AVG: <span class="text-cyan-600">--</span></p>
-				<p>TOTAL TESTS: <span class="text-cyan-600">--</span></p>
+				<p>LAST STORED SCORE: <span class="text-cyan-600">{lastStoredScore}</span></p>
 			</div>
 		</div>
 

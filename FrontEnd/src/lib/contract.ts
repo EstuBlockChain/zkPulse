@@ -1,4 +1,4 @@
-import { getAccount, writeContract, switchChain } from '@wagmi/core';
+import { getAccount, writeContract, switchChain, readContract } from '@wagmi/core';
 import { wagmiAdapter, zkSysPoBDevnet, syscoinTestnet, syscoinMainnet } from './web3';
 
 // Configuración de contratos por red
@@ -6,19 +6,32 @@ export const CONTRACT_CONFIG: Record<number, `0x${string}`> = {
     [zkSysPoBDevnet.id]: '0x9CB357A29d2256d2B54889DC2Df936BD197ffA53',
 };
 
-// ABI mínima para la función publishScore
+// ABI del contrato Storage
 export const CONTRACT_ABI = [
     {
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "score",
+                "name": "num",
                 "type": "uint256"
             }
         ],
-        "name": "publishScore",
+        "name": "store",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "retrieve",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     }
 ] as const;
@@ -49,10 +62,9 @@ export async function publishScoreToChain(score: number): Promise<string> {
         const hash = await writeContract(wagmiAdapter.wagmiConfig, {
             address: contractAddress as `0x${string}`,
             abi: CONTRACT_ABI,
-            functionName: 'publishScore',
+            functionName: 'store', // Updated to 'store'
             args: [BigInt(score)],
             chainId: targetChainId,
-            // gas: 300000n, // Removed hardcoded gas limit to allow auto-estimation on zkSYS
         });
 
         return hash;
@@ -69,5 +81,20 @@ export async function publishScoreToChain(score: number): Promise<string> {
         const cleanMessage = error.details || error.shortMessage || error.message || 'Unknown error';
         alert(`Error: ${cleanMessage}`);
         throw error;
+    }
+}
+
+export async function readLastScore(): Promise<string> {
+    try {
+        const result = await readContract(wagmiAdapter.wagmiConfig, {
+            address: CONTRACT_CONFIG[zkSysPoBDevnet.id],
+            abi: CONTRACT_ABI,
+            functionName: 'retrieve',
+            chainId: zkSysPoBDevnet.id
+        });
+        return result.toString();
+    } catch (error) {
+        console.error('Error reading contract:', error);
+        return '--';
     }
 }
