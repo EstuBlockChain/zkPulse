@@ -57,9 +57,17 @@ export async function publishScoreToChain(score: number): Promise<string> {
 
         return hash;
     } catch (error: any) {
+        // Ignore user rejection (cancelling the transaction is not an error)
+        if (error.message?.includes('User rejected') || error.code === 4001) {
+            console.log('Transaction cancelled by user');
+            return ''; // Return empty string or handle gracefully
+        }
+
         console.error('Error publishing score:', error);
-        // Show clearer error to user
-        alert(`Error publishing score: ${error.message || error}`);
+
+        // Show a cleaner error message to the user (stripping technical details)
+        const cleanMessage = error.details || error.shortMessage || error.message || 'Unknown error';
+        alert(`Error: ${cleanMessage}`);
         throw error;
     }
 }
