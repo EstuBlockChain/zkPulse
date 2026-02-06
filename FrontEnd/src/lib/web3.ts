@@ -1,4 +1,5 @@
 import { createAppKit } from '@reown/appkit'
+import { mainnet, arbitrum, polygon, optimism, base, bsc, avalanche } from '@reown/appkit/networks'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { defineChain } from 'viem'
 
@@ -12,7 +13,7 @@ export const zkSysPoBDevnet = defineChain({
     name: 'zkSYS PoB Devnet',
     nativeCurrency: { name: 'Syscoin', symbol: 'TSYS', decimals: 18 },
     rpcUrls: {
-        default: { http: ['https://rpc-pob.dev11.top'] }
+        default: { http: ['https://zkpulse.onrender.com/api/rpc'] }
     },
     blockExplorers: {
         default: { name: 'zkSYS Explorer', url: 'https://explorer-pob.dev11.top/' }
@@ -20,8 +21,34 @@ export const zkSysPoBDevnet = defineChain({
     testnet: true
 })
 
+export const syscoinTestnet = defineChain({
+    id: 5700,
+    name: 'Syscoin Tanenbaum',
+    nativeCurrency: { name: 'Syscoin', symbol: 'tSYS', decimals: 18 },
+    rpcUrls: {
+        default: { http: ['https://rpc.tanenbaum.io', 'https://syscoin-tanenbaum-evm.publicnode.com'] }
+    },
+    blockExplorers: {
+        default: { name: 'Syscoin Explorer', url: 'https://tanenbaum.io' }
+    },
+    testnet: true
+})
+
+export const syscoinMainnet = defineChain({
+    id: 57,
+    name: 'Syscoin Mainnet',
+    nativeCurrency: { name: 'Syscoin', symbol: 'SYS', decimals: 18 },
+    rpcUrls: {
+        default: { http: ['https://rpc.syscoin.org'] }
+    },
+    blockExplorers: {
+        default: { name: 'Syscoin Explorer', url: 'https://syscoin.org' }
+    },
+    testnet: false
+})
+
 // @ts-ignore
-export const networks = [zkSysPoBDevnet]
+export const networks = [zkSysPoBDevnet, syscoinMainnet, syscoinTestnet, mainnet, arbitrum, polygon, optimism, base, bsc, avalanche]
 
 export const wagmiAdapter = new WagmiAdapter({
     projectId,
