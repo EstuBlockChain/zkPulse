@@ -5,7 +5,12 @@
 	import { sounds } from '$lib/audio';
 	import { getAccount } from '@wagmi/core';
 	import { wagmiAdapter, modal, zkSysPoBDevnet } from '$lib/web3';
-	import { submitScoreToChain, fetchLeaderboard, fetchTotalGames } from '$lib/contract';
+	import {
+		submitScoreToChain,
+		fetchLeaderboard,
+		fetchTotalGames,
+		fetchPersonalBest
+	} from '$lib/contract';
 	import ShareButton from '$lib/components/ShareButton.svelte';
 	import Leaderboard from '$lib/components/Leaderboard.svelte';
 
@@ -20,11 +25,15 @@
 	let gameLoop: any;
 	let spawnLoop: any;
 	let totalGames: string = '--';
+	let onChainBest: number = 0; // Personal Best on Chain
 	let leaderboardData: { address: string; value: number; reliability: number }[] = [];
 
 	// Métricas reactivas
 	$: reliabilityScore = calculateReliability($userStats);
 	$: bestScore = $userStats.bestScore;
+
+	// Check if current score beats on-chain best
+	$: isNewRecord = score > onChainBest;
 
 	// Definición de tipos de Spikes (Paquetes de red)
 	type Spike = {
@@ -52,6 +61,13 @@
 				reliability: Number(item.reliability)
 			}))
 			.sort((a, b) => b.value - a.value);
+
+		// Fetch personal best if wallet is connected
+		const account = getAccount(wagmiAdapter.wagmiConfig);
+		if (account.isConnected && account.address) {
+			const best = await fetchPersonalBest(account.address);
+			onChainBest = Number(best) || 0;
+		}
 	});
 
 	// -- LÓGICA DEL JUEGO --
@@ -178,6 +194,12 @@
 						reliability: Number(item.reliability)
 					}))
 					.sort((a, b) => b.value - a.value);
+
+				// Update personal best
+				if (account.address) {
+					const best = await fetchPersonalBest(account.address);
+					onChainBest = Number(best) || 0;
+				}
 			}, 5000); // Wait a bit for block propagation
 		} catch (error: any) {
 			console.error(error);
@@ -314,6 +336,17 @@
 				</div>
 			</div>
 
+			{#if isNewRecord}
+				<div class="mb-4 animate-bounce text-center font-bold tracking-widest text-yellow-400">
+					🏆 NEW RECORD DETECTED!
+					<div class="text-xs font-normal text-slate-400">Beat on-chain best: {onChainBest}</div>
+				</div>
+			{:else}
+				<div class="mb-4 text-center text-xs tracking-widest text-slate-500">
+					PREV ON-CHAIN BEST: {onChainBest}
+				</div>
+			{/if}
+
 			<div class="flex gap-4">
 				<button
 					on:click={startGame}
@@ -324,13 +357,24 @@
 
 				<ShareButton {score} reliability={reliabilityScore} />
 
-				<button
-					on:click={handlePublish}
-					disabled={isPublishing}
-					class="bg-cyan-500 px-6 py-3 font-bold text-black shadow-[0_0_15px_rgba(34,211,238,0.4)] hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					{isPublishing ? 'PUBLISHING...' : 'PUBLISH ON-CHAIN'}
-				</button>
+				<div class="group relative">
+					<button
+						on:click={handlePublish}
+						disabled={isPublishing}
+						class="bg-cyan-500 px-6 py-3 font-bold text-black shadow-[0_0_15px_rgba(34,211,238,0.4)] hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50 {isNewRecord
+							? 'animate-pulse'
+							: ''}"
+					>
+						{isPublishing ? 'PUBLISHING...' : 'PUBLISH ON-CHAIN'}
+					</button>
+					{#if !isNewRecord && onChainBest > 0}
+						<div
+							class="pointer-events-none absolute -top-12 left-1/2 w-48 -translate-x-1/2 rounded bg-slate-800 p-2 text-center text-xs text-slate-300 opacity-0 transition-opacity group-hover:opacity-100"
+						>
+							Score lower than record ({onChainBest}).
+						</div>
+					{/if}
+				</div>
 			</div>
 
 			{#if txHash}
@@ -348,10 +392,7 @@
 			{/if}
 
 			<div class="mt-8 w-full max-w-md">
-				<Leaderboard
-					scores={leaderboardData}
-					userAddress={getAccount(wagmiAdapter.wagmiConfig).address}
-				/>
+				<Leaderboard scores={leaderboardData} history={$userStats.history} />
 			</div>
 		</div>
 	{/if}

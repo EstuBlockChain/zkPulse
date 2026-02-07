@@ -3,14 +3,22 @@
 
 	// Props
 	export let scores: { address: string; value: number; reliability: number }[] = [];
-	export let userAddress: string | undefined = undefined;
+	export let history: { score: number; timestamp: number }[] = []; // Local history
 
 	let activeTab: 'score' | 'history' = 'score';
 
-	// Computed
-	$: myHistory = userAddress
-		? scores.filter((s) => s.address.toLowerCase() === userAddress?.toLowerCase())
-		: [];
+	function shortenAddress(addr: string) {
+		if (!addr) return '';
+		return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+	}
+
+	function getTrend(currentScore: number, index: number) {
+		if (index >= history.length - 1) return { icon: '-', color: 'text-slate-500' };
+		const prevScore = history[index + 1].score;
+		if (currentScore > prevScore) return { icon: '↑', color: 'text-green-400' };
+		if (currentScore < prevScore) return { icon: '↓', color: 'text-red-400' };
+		return { icon: '-', color: 'text-slate-500' };
+	}
 </script>
 
 <div class="w-full max-w-md border border-cyan-900/50 bg-slate-900/50 p-4 backdrop-blur-sm">
@@ -45,7 +53,7 @@
 						<div class="flex items-center gap-3">
 							<span class="w-4 text-xs font-bold text-slate-500">#{i + 1}</span>
 							<div class="flex flex-col">
-								<span class="font-mono text-cyan-100">{item.address}</span>
+								<span class="font-mono text-cyan-100">{shortenAddress(item.address)}</span>
 								<!-- Reliability Indicator -->
 								<div class="flex items-center gap-1">
 									<div class="h-1 w-10 overflow-hidden rounded-full bg-slate-800">
@@ -61,19 +69,22 @@
 			</div>
 		{:else}
 			<div in:fade={{ duration: 200 }}>
-				{#if myHistory.length === 0}
-					<div class="py-8 text-center text-xs text-slate-500">NO HISTORY FOUND</div>
+				{#if history.length === 0}
+					<div class="py-8 text-center text-xs text-slate-500">NO LOCAL HISTORY FOUND</div>
 				{:else}
-					{#each myHistory.slice(0, 10) as item, i}
+					{#each history.slice(0, 10) as item, i}
+						{@const trend = getTrend(item.score, i)}
 						<div class="flex items-center justify-between border-b border-white/5 py-2 text-sm">
 							<div class="flex items-center gap-3">
-								<span class="w-4 text-xs font-bold text-slate-500"></span>
+								<span class="{trend.color} w-4 text-xs font-bold">{trend.icon}</span>
 								<div class="flex flex-col">
-									<span class="font-mono text-cyan-100">RUN #{myHistory.length - i}</span>
-									<span class="text-[0.6rem] text-slate-400">Reliability: {item.reliability}%</span>
+									<span class="font-mono text-cyan-100">RUN #{history.length - i}</span>
+									<span class="text-[0.6rem] text-slate-500"
+										>{new Date(item.timestamp).toLocaleTimeString()}</span
+									>
 								</div>
 							</div>
-							<span class="font-bold text-white">{item.value} PTS</span>
+							<span class="font-bold text-white">{item.score} PTS</span>
 						</div>
 					{/each}
 				{/if}
