@@ -245,6 +245,11 @@
 			const hash = await submitScoreToChain(score, Math.round(reliabilityScore));
 			txHash = hash;
 
+			// Optimistic update
+			if (!isNaN(Number(totalGames))) {
+				totalGames = (Number(totalGames) + 1).toString();
+			}
+
 			// Determinar explorador según red
 			if (account.chainId === zkSysPoBDevnet.id) {
 				explorerUrl = 'https://explorer-pob.dev11.top/tx';
@@ -297,8 +302,9 @@
 				<span class="text-xs text-slate-400">{isPlaying ? 'LIVE TRAFFIC' : 'SYSTEM IDLE'}</span>
 			</div>
 
-			<div class="mt-4 text-xs text-slate-500">
-				<p>TOTAL GAMES PLAYED: <span class="text-cyan-600">{totalGames}</span></p>
+			<div class="mt-4 flex gap-4 text-xs text-slate-500">
+				<p>GLOBAL GAMES: <span class="text-cyan-600">{totalGames}</span></p>
+				<p>LOCAL RUNS: <span class="text-purple-400">{$userStats.totalGamesPlayed}</span></p>
 			</div>
 		</div>
 
