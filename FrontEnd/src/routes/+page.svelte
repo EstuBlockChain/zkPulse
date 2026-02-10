@@ -74,14 +74,22 @@
 		totalGames = await fetchTotalGames();
 
 		const rawLeaderboard = await fetchLeaderboard();
+
+		// Filter to keep only the highest score per player
+		const uniqueScores = new Map<string, { address: string; value: number; reliability: number }>();
+
+		rawLeaderboard.forEach((item) => {
+			const address = item.player;
+			const value = Number(item.score);
+			const reliability = Number(item.reliability);
+
+			if (!uniqueScores.has(address) || value > uniqueScores.get(address)!.value) {
+				uniqueScores.set(address, { address, value, reliability });
+			}
+		});
+
 		// Format and sort leaderboard (high to low)
-		leaderboardData = rawLeaderboard
-			.map((item) => ({
-				address: item.player,
-				value: Number(item.score),
-				reliability: Number(item.reliability)
-			}))
-			.sort((a, b) => b.value - a.value);
+		leaderboardData = Array.from(uniqueScores.values()).sort((a, b) => b.value - a.value);
 
 		// Fetch personal best if wallet is connected
 		const account = getAccount(wagmiAdapter.wagmiConfig);
@@ -210,13 +218,24 @@
 			setTimeout(async () => {
 				totalGames = await fetchTotalGames();
 				const rawLeaderboard = await fetchLeaderboard();
-				leaderboardData = rawLeaderboard
-					.map((item) => ({
-						address: item.player,
-						value: Number(item.score),
-						reliability: Number(item.reliability)
-					}))
-					.sort((a, b) => b.value - a.value);
+
+				// Filter to keep only the highest score per player
+				const uniqueScores = new Map<
+					string,
+					{ address: string; value: number; reliability: number }
+				>();
+
+				rawLeaderboard.forEach((item) => {
+					const address = item.player;
+					const value = Number(item.score);
+					const reliability = Number(item.reliability);
+
+					if (!uniqueScores.has(address) || value > uniqueScores.get(address)!.value) {
+						uniqueScores.set(address, { address, value, reliability });
+					}
+				});
+
+				leaderboardData = Array.from(uniqueScores.values()).sort((a, b) => b.value - a.value);
 
 				// Update personal best
 				if (account.address) {
