@@ -53,6 +53,52 @@
 	let spikes: Spike[] = [];
 	let nextId = 0;
 
+	// Helper to update personal best from multiple sources
+	async function updateOnChainBest(address: string) {
+		if (!address) return;
+
+		let maxScore = 0;
+
+		// 1. Check direct contract mapping
+		try {
+			const bestFromContract = await fetchPersonalBest(address as `0x${string}`);
+			maxScore = Number(bestFromContract) || 0;
+		} catch (e) {
+			console.error('Error fetching best score:', e);
+		}
+
+		// 2. Check leaderboard data (in case contract mapping is out of sync)
+		const leaderboardEntry = leaderboardData.find(
+			(p) => p.address.toLowerCase() === address.toLowerCase()
+		);
+
+		if (leaderboardEntry && leaderboardEntry.value > maxScore) {
+			maxScore = leaderboardEntry.value;
+		}
+
+		onChainBest = maxScore;
+	}
+
+	async function refreshLeaderboard() {
+		const rawLeaderboard = await fetchLeaderboard();
+
+		// Filter to keep only the highest score per player
+		const uniqueScores = new Map<string, { address: string; value: number; reliability: number }>();
+
+		rawLeaderboard.forEach((item) => {
+			const address = item.player;
+			const value = Number(item.score);
+			const reliability = Number(item.reliability);
+
+			if (!uniqueScores.has(address) || value > uniqueScores.get(address)!.value) {
+				uniqueScores.set(address, { address, value, reliability });
+			}
+		});
+
+		// Format and sort leaderboard (high to low)
+		leaderboardData = Array.from(uniqueScores.values()).sort((a, b) => b.value - a.value);
+	}
+
 	onMount(async () => {
 		// Watch wallet changes
 		unwatchAccount = watchAccount(wagmiAdapter.wagmiConfig, {
@@ -72,32 +118,14 @@
 
 		// Fetch initial data
 		totalGames = await fetchTotalGames();
-
-		const rawLeaderboard = await fetchLeaderboard();
-
-		// Filter to keep only the highest score per player
-		const uniqueScores = new Map<string, { address: string; value: number; reliability: number }>();
-
-		rawLeaderboard.forEach((item) => {
-			const address = item.player;
-			const value = Number(item.score);
-			const reliability = Number(item.reliability);
-
-			if (!uniqueScores.has(address) || value > uniqueScores.get(address)!.value) {
-				uniqueScores.set(address, { address, value, reliability });
-			}
-		});
-
-		// Format and sort leaderboard (high to low)
-		leaderboardData = Array.from(uniqueScores.values()).sort((a, b) => b.value - a.value);
+		await refreshLeaderboard();
 
 		// Fetch personal best if wallet is connected
 		const account = getAccount(wagmiAdapter.wagmiConfig);
 		if (account.isConnected && account.address) {
 			accountAddress = account.address;
 			isConnected = true;
-			const best = await fetchPersonalBest(account.address);
-			onChainBest = Number(best) || 0;
+			updateOnChainBest(account.address);
 		}
 	});
 
@@ -217,30 +245,11 @@
 			// Update leaderboard and stats after successful publish
 			setTimeout(async () => {
 				totalGames = await fetchTotalGames();
-				const rawLeaderboard = await fetchLeaderboard();
-
-				// Filter to keep only the highest score per player
-				const uniqueScores = new Map<
-					string,
-					{ address: string; value: number; reliability: number }
-				>();
-
-				rawLeaderboard.forEach((item) => {
-					const address = item.player;
-					const value = Number(item.score);
-					const reliability = Number(item.reliability);
-
-					if (!uniqueScores.has(address) || value > uniqueScores.get(address)!.value) {
-						uniqueScores.set(address, { address, value, reliability });
-					}
-				});
-
-				leaderboardData = Array.from(uniqueScores.values()).sort((a, b) => b.value - a.value);
+				await refreshLeaderboard();
 
 				// Update personal best
 				if (account.address) {
-					const best = await fetchPersonalBest(account.address);
-					onChainBest = Number(best) || 0;
+					updateOnChainBest(account.address);
 				}
 			}, 5000); // Wait a bit for block propagation
 		} catch (error: any) {
