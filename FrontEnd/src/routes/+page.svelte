@@ -37,8 +37,8 @@
 	$: reliabilityScore = calculateReliability($userStats);
 	$: bestScore = $userStats.bestScore;
 
-	// Check if current score beats on-chain best
-	$: isNewRecord = score > onChainBest;
+	// Check if current score beats the appropriate record
+	$: isNewRecord = accountAddress ? score > onChainBest : score > bestScore;
 
 	// Definición de tipos de Spikes (Paquetes de red)
 	type Spike = {
@@ -405,11 +405,17 @@
 			{#if isNewRecord}
 				<div class="mb-4 animate-bounce text-center font-bold tracking-widest text-yellow-400">
 					🏆 NEW RECORD DETECTED!
-					<div class="text-xs font-normal text-slate-400">Beat on-chain best: {onChainBest}</div>
+					<div class="text-xs font-normal text-slate-400">
+						Beat {accountAddress ? 'on-chain' : 'local'} best: {accountAddress
+							? onChainBest
+							: bestScore}
+					</div>
 				</div>
 			{:else}
 				<div class="mb-4 text-center text-xs tracking-widest text-slate-500">
-					PREV ON-CHAIN BEST: {onChainBest}
+					PREV {accountAddress ? 'ON-CHAIN' : 'LOCAL'} BEST: {accountAddress
+						? onChainBest
+						: bestScore}
 				</div>
 			{/if}
 
