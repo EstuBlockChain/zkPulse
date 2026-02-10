@@ -3,7 +3,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { userStats, calculateReliability } from '$lib/store';
 	import { sounds } from '$lib/audio';
-	import { getAccount } from '@wagmi/core';
+	import { getAccount, watchAccount } from '@wagmi/core';
 	import { wagmiAdapter, modal, zkSysPoBDevnet } from '$lib/web3';
 	import {
 		submitScoreToChain,
@@ -28,6 +28,11 @@
 	let onChainBest: number = 0; // Personal Best on Chain
 	let leaderboardData: { address: string; value: number; reliability: number }[] = [];
 
+	// Wallet State
+	let accountAddress: string | undefined = undefined;
+	let isConnected = false;
+	let unwatchAccount: () => void;
+
 	// Métricas reactivas
 	$: reliabilityScore = calculateReliability($userStats);
 	$: bestScore = $userStats.bestScore;
@@ -49,6 +54,22 @@
 	let nextId = 0;
 
 	onMount(async () => {
+		// Watch wallet changes
+		unwatchAccount = watchAccount(wagmiAdapter.wagmiConfig, {
+			onChange(data) {
+				accountAddress = data.address;
+				isConnected = data.isConnected;
+
+				if (data.isConnected && data.address) {
+					fetchPersonalBest(data.address).then((best) => {
+						onChainBest = Number(best) || 0;
+					});
+				} else {
+					onChainBest = 0;
+				}
+			}
+		});
+
 		// Fetch initial data
 		totalGames = await fetchTotalGames();
 
@@ -65,6 +86,8 @@
 		// Fetch personal best if wallet is connected
 		const account = getAccount(wagmiAdapter.wagmiConfig);
 		if (account.isConnected && account.address) {
+			accountAddress = account.address;
+			isConnected = true;
 			const best = await fetchPersonalBest(account.address);
 			onChainBest = Number(best) || 0;
 		}
@@ -214,6 +237,7 @@
 	onDestroy(() => {
 		clearInterval(gameLoop);
 		clearInterval(spawnLoop);
+		if (unwatchAccount) unwatchAccount();
 	});
 </script>
 
@@ -238,11 +262,25 @@
 			</div>
 		</div>
 
-		<div class="text-right">
-			<div class="text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">
-				{score.toString().padStart(4, '0')}
+		<div class="flex flex-col items-end gap-2 text-right">
+			<!-- Wallet Button -->
+			{#if isConnected && accountAddress}
+				<button
+					on:click={() => modal.open()}
+					class="pointer-events-auto mb-1 flex items-center gap-2 rounded-full border border-cyan-500/30 bg-slate-900/80 px-4 py-1.5 text-xs font-bold text-cyan-400 backdrop-blur-sm transition-all hover:bg-cyan-500/10 hover:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
+				>
+					<span class="h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
+					{accountAddress.slice(0, 6)}...{accountAddress.slice(-4)}
+					<span class="ml-1 text-[10px] text-slate-500">▼</span>
+				</button>
+			{/if}
+
+			<div>
+				<div class="text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">
+					{score.toString().padStart(4, '0')}
+				</div>
+				<div class="text-xs tracking-widest text-cyan-500">PACKETS PROCESSED</div>
 			</div>
-			<div class="text-xs tracking-widest text-cyan-500">PACKETS PROCESSED</div>
 		</div>
 	</div>
 
