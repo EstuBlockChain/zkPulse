@@ -262,12 +262,12 @@
 			</div>
 		</div>
 
-		<div class="flex flex-col items-end gap-2 text-right">
+		<div class="pointer-events-auto flex flex-col items-end gap-2 text-right">
 			<!-- Wallet Button -->
 			{#if isConnected && accountAddress}
 				<button
-					on:click={() => modal.open()}
-					class="pointer-events-auto mb-1 flex items-center gap-2 rounded-full border border-cyan-500/30 bg-slate-900/80 px-4 py-1.5 text-xs font-bold text-cyan-400 backdrop-blur-sm transition-all hover:bg-cyan-500/10 hover:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
+					on:click={() => modal?.open({ view: 'Account' })}
+					class="mb-1 flex items-center gap-2 rounded-full border border-cyan-500/30 bg-slate-900/80 px-4 py-1.5 text-xs font-bold text-cyan-400 backdrop-blur-sm transition-all hover:bg-cyan-500/10 hover:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
 				>
 					<span class="h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
 					{accountAddress.slice(0, 6)}...{accountAddress.slice(-4)}
@@ -275,7 +275,7 @@
 				</button>
 			{/if}
 
-			<div>
+			<div class="pointer-events-none">
 				<div class="text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">
 					{score.toString().padStart(4, '0')}
 				</div>
