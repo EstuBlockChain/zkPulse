@@ -37,9 +37,12 @@
 	$: reliabilityScore = calculateReliability($userStats);
 	$: bestScore = $userStats.bestScore;
 
+	// Effective Best: The highest score from all sources (Contract, Leaderboard, Local)
+	// onChainBest is strictly the best form remote sources.
+	$: effectiveBest = Math.max(onChainBest, bestScore);
+
 	// Check if current score beats the appropriate record
-	// onChainBest now aggregates Contract + Leaderboard + Local Best
-	$: isNewRecord = score > onChainBest;
+	$: isNewRecord = score > effectiveBest;
 
 	// Definición de tipos de Spikes (Paquetes de red)
 	type Spike = {
@@ -54,7 +57,7 @@
 	let spikes: Spike[] = [];
 	let nextId = 0;
 
-	// Helper to update personal best from multiple sources
+	// Helper to update personal best from multiple sources (Remote Only)
 	async function updateOnChainBest(address: string) {
 		if (!address) return;
 
@@ -75,11 +78,6 @@
 
 		if (leaderboardEntry && leaderboardEntry.value > maxScore) {
 			maxScore = leaderboardEntry.value;
-		}
-
-		// 3. Check local history best (if playing on same device)
-		if (bestScore > maxScore) {
-			maxScore = bestScore;
 		}
 
 		onChainBest = maxScore;
@@ -412,12 +410,12 @@
 				<div class="mb-4 animate-bounce text-center font-bold tracking-widest text-yellow-400">
 					🏆 NEW RECORD DETECTED!
 					<div class="text-xs font-normal text-slate-400">
-						Beat previous best: {onChainBest}
+						Beat previous best: {effectiveBest}
 					</div>
 				</div>
 			{:else}
 				<div class="mb-4 text-center text-xs tracking-widest text-slate-500">
-					PREV BEST SCORE: {onChainBest}
+					PREV BEST SCORE: {effectiveBest}
 				</div>
 			{/if}
 
