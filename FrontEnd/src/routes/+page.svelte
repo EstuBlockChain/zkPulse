@@ -42,7 +42,7 @@
 	$: effectiveBest = Math.max(onChainBest, bestScore);
 
 	// Check if current score beats the appropriate record
-	$: isNewRecord = score > effectiveBest;
+	// Logic moved to endGame() to capture state before store update
 
 	// Definición de tipos de Spikes (Paquetes de red)
 	type Spike = {
@@ -207,6 +207,10 @@
 		// Aquí podríamos agregar efectos de sonido o partículas visuales
 	}
 
+	// State to track record status for the finished game
+	let isNewRecord = false;
+	let previousBestSnapshot = 0;
+
 	function endGame() {
 		isPlaying = false;
 		isFinished = true;
@@ -215,7 +219,11 @@
 
 		sounds.playGameOver();
 
-		// Guardar resultado
+		// Snapshot current best before updating
+		previousBestSnapshot = effectiveBest;
+		isNewRecord = score > effectiveBest;
+
+		// Guardar resultado (updates bestScore store)
 		userStats.addRun(score);
 	}
 
@@ -410,7 +418,7 @@
 				<div class="mb-4 animate-bounce text-center font-bold tracking-widest text-yellow-400">
 					🏆 NEW RECORD DETECTED!
 					<div class="text-xs font-normal text-slate-400">
-						Beat previous best: {effectiveBest}
+						Beat previous best: {previousBestSnapshot}
 					</div>
 				</div>
 			{:else}
