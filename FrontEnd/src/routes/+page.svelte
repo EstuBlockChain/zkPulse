@@ -447,11 +447,11 @@
 					>
 						{isPublishing ? 'PUBLISHING...' : 'PUBLISH ON-CHAIN'}
 					</button>
-					{#if !isNewRecord && onChainBest > 0}
+					{#if !isNewRecord && effectiveBest > 0}
 						<div
 							class="pointer-events-none absolute -top-12 left-1/2 w-48 -translate-x-1/2 rounded bg-slate-800 p-2 text-center text-xs text-slate-300 opacity-0 transition-opacity group-hover:opacity-100"
 						>
-							Score lower than record ({onChainBest}).
+							Score lower than record ({effectiveBest}).
 						</div>
 					{/if}
 				</div>
