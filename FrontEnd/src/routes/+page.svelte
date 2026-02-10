@@ -38,7 +38,8 @@
 	$: bestScore = $userStats.bestScore;
 
 	// Check if current score beats the appropriate record
-	$: isNewRecord = accountAddress ? score > onChainBest : score > bestScore;
+	// onChainBest now aggregates Contract + Leaderboard + Local Best
+	$: isNewRecord = score > onChainBest;
 
 	// Definición de tipos de Spikes (Paquetes de red)
 	type Spike = {
@@ -74,6 +75,11 @@
 
 		if (leaderboardEntry && leaderboardEntry.value > maxScore) {
 			maxScore = leaderboardEntry.value;
+		}
+
+		// 3. Check local history best (if playing on same device)
+		if (bestScore > maxScore) {
+			maxScore = bestScore;
 		}
 
 		onChainBest = maxScore;
@@ -406,16 +412,12 @@
 				<div class="mb-4 animate-bounce text-center font-bold tracking-widest text-yellow-400">
 					🏆 NEW RECORD DETECTED!
 					<div class="text-xs font-normal text-slate-400">
-						Beat {accountAddress ? 'on-chain' : 'local'} best: {accountAddress
-							? onChainBest
-							: bestScore}
+						Beat previous best: {onChainBest}
 					</div>
 				</div>
 			{:else}
 				<div class="mb-4 text-center text-xs tracking-widest text-slate-500">
-					PREV {accountAddress ? 'ON-CHAIN' : 'LOCAL'} BEST: {accountAddress
-						? onChainBest
-						: bestScore}
+					PREV BEST SCORE: {onChainBest}
 				</div>
 			{/if}
 
