@@ -40,10 +40,10 @@ function createUserStats() {
         addRun: (score: number) => {
             update(stats => {
                 const newRun: GameRun = { score, timestamp: Date.now() };
-                
-                // Mantener solo los últimos 5 juegos en el historial para el cálculo
-                const newHistory = [newRun, ...stats.history].slice(0, 5);
-                
+
+                // Mantener todo el historial
+                const newHistory = [newRun, ...stats.history];
+
                 const newStats = {
                     bestScore: Math.max(stats.bestScore, score),
                     history: newHistory,
@@ -73,7 +73,10 @@ export const userStats = createUserStats();
 export function calculateReliability(stats: UserStats): number {
     if (stats.history.length === 0) return 0;
 
-    const avgLast5 = stats.history.reduce((acc, run) => acc + run.score, 0) / stats.history.length;
+    // Tomar solo los últimos 5 para el cálculo (los más recientes están al inicio del array)
+    const recentGames = stats.history.slice(0, 5);
+    const avgLast5 = recentGames.reduce((acc, run) => acc + run.score, 0) / recentGames.length;
+
     // 60% promedio últimos 5 + 40% mejor score histórico
     return Math.round((avgLast5 * 0.6) + (stats.bestScore * 0.4));
 }

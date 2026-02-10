@@ -68,11 +68,11 @@
 				{/each}
 			</div>
 		{:else}
-			<div in:fade={{ duration: 200 }}>
+			<div in:fade={{ duration: 200 }} class="custom-scrollbar max-h-60 overflow-y-auto pr-2">
 				{#if history.length === 0}
 					<div class="py-8 text-center text-xs text-slate-500">NO LOCAL HISTORY FOUND</div>
 				{:else}
-					{#each history.slice(0, 10) as item, i}
+					{#each history as item, i}
 						{@const trend = getTrend(item.score, i)}
 						<div class="flex items-center justify-between border-b border-white/5 py-2 text-sm">
 							<div class="flex items-center gap-3">
@@ -92,3 +92,19 @@
 		{/if}
 	</div>
 </div>
+
+<style>
+	.custom-scrollbar::-webkit-scrollbar {
+		width: 4px;
+	}
+	.custom-scrollbar::-webkit-scrollbar-track {
+		background: rgba(6, 182, 212, 0.1);
+	}
+	.custom-scrollbar::-webkit-scrollbar-thumb {
+		background: rgba(6, 182, 212, 0.5);
+		border-radius: 2px;
+	}
+	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+		background: rgba(6, 182, 212, 0.8);
+	}
+</style>
