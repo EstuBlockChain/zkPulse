@@ -121,7 +121,6 @@
 		});
 
 		// Fetch initial data
-		totalGames = await fetchTotalGames();
 		await refreshLeaderboard();
 
 		// Fetch personal best if wallet is connected
@@ -245,11 +244,6 @@
 			const hash = await submitScoreToChain(score, Math.round(reliabilityScore));
 			txHash = hash;
 
-			// Optimistic update
-			if (!isNaN(Number(totalGames))) {
-				totalGames = (Number(totalGames) + 1).toString();
-			}
-
 			// Determinar explorador según red
 			if (account.chainId === zkSysPoBDevnet.id) {
 				explorerUrl = 'https://explorer-pob.dev11.top/tx';
@@ -303,7 +297,7 @@
 			</div>
 
 			<div class="mt-4 flex gap-4 text-xs text-slate-500">
-				<p>GLOBAL GAMES: <span class="text-cyan-600">{totalGames}</span></p>
+				<p>GLOBAL GAMES: <span class="text-cyan-600">{leaderboardData.length}</span></p>
 				<p>LOCAL RUNS: <span class="text-purple-400">{$userStats.totalGamesPlayed}</span></p>
 			</div>
 		</div>
