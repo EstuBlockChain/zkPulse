@@ -10,6 +10,19 @@ declare global {
 	}
 }
 
+declare module 'snarkjs' {
+	export const groth16: {
+		fullProve(inputs: any, wasmPath: string, zkeyPath: string): Promise<{ proof: any; publicSignals: any[] }>;
+		verify(vKey: any, publicSignals: any[], proof: any): Promise<boolean>;
+	};
+	export const powersOfTau: any;
+	export const zkey: any;
+}
+
+declare module 'circomlibjs' {
+	export function buildPoseidon(): Promise<any>;
+}
+
 export { };
 
 
