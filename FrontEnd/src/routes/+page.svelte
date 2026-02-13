@@ -364,10 +364,15 @@
 				throw new Error(err.error || 'Oracle Verification Failed');
 			}
 
-			const { signature } = await verifyRes.json();
+			const verifyData = await verifyRes.json();
+			const signature = verifyData.signature;
+			const verifiedScore = Number(verifyData.score);
+
+			console.log(`Submitting Verified Score: ${verifiedScore} (Local was: ${score})`);
 
 			// C. Submit to Contract
-			const hash = await submitScoreToChain(score, reliabilityScore, signature);
+			// Use verifiedScore to match the Oracle's signature exactly
+			const hash = await submitScoreToChain(verifiedScore, reliabilityScore, signature);
 			txHash = hash;
 
 			// Determinar explorador según red
