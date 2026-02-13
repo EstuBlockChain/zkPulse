@@ -165,6 +165,7 @@
 
 		// Initialize Poseidon for ZK RNG
 		try {
+			// @ts-ignore - Module types are defined in app.d.ts but editor may need sync
 			const { buildPoseidon } = await import('circomlibjs');
 			poseidon = await buildPoseidon();
 		} catch (e) {
