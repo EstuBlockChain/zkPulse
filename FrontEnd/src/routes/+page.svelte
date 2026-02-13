@@ -348,11 +348,15 @@
 			const { proof, publicSignals } = await snarkjs.groth16.fullProve(inputs, wasmPath, zkeyPath);
 			console.log('Proof Generated:', publicSignals);
 
-			// B. Verify & Sign with Oracle
 			const verifyRes = await fetch('/api/verify-score', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ proof, publicSignals, address: account.address })
+				body: JSON.stringify({
+					proof,
+					publicSignals,
+					address: account.address,
+					reliability: reliabilityScore
+				})
 			});
 
 			if (!verifyRes.ok) {
@@ -363,7 +367,7 @@
 			const { signature } = await verifyRes.json();
 
 			// C. Submit to Contract
-			const hash = await submitScoreToChain(score, signature);
+			const hash = await submitScoreToChain(score, reliabilityScore, signature);
 			txHash = hash;
 
 			// Determinar explorador según red

@@ -17,6 +17,11 @@ export const CONTRACT_ABI = [
                 "type": "uint256"
             },
             {
+                "internalType": "uint256",
+                "name": "_reliability",
+                "type": "uint256"
+            },
+            {
                 "internalType": "bytes",
                 "name": "_signature",
                 "type": "bytes"
@@ -103,7 +108,7 @@ export type PlayerScore = {
     timestamp: bigint;
 };
 
-export async function submitScoreToChain(score: number, signature: string): Promise<string> {
+export async function submitScoreToChain(score: number, reliability: number, signature: string): Promise<string> {
     try {
         const account = getAccount(wagmiAdapter.wagmiConfig);
 
@@ -130,7 +135,7 @@ export async function submitScoreToChain(score: number, signature: string): Prom
             address: contractAddress as `0x${string}`,
             abi: CONTRACT_ABI,
             functionName: 'submitScore',
-            args: [BigInt(score), signature as `0x${string}`],
+            args: [BigInt(score), BigInt(reliability), signature as `0x${string}`],
             chainId: targetChainId,
         });
 

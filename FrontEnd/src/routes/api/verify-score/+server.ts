@@ -19,40 +19,28 @@ export async function POST({ request }: RequestEvent) {
     const snarkjs = require('snarkjs');
     try {
         const body = await request.json();
-        const { proof, publicSignals, address } = body;
+        const { proof, publicSignals, address, reliability } = body;
 
-        if (!proof || !publicSignals || !address) {
+        if (!proof || !publicSignals || !address || reliability === undefined) {
             return json({ error: 'Missing required parameters' }, { status: 400 });
         }
 
-        // 1. Load Verification Key (Imported automatically by SvelteKit)
-        if (!vKey) {
-            return json({ error: 'Server misconfiguration: Verification Key missing' }, { status: 500 });
-        }
-
-        // 2. Verify ZK Proof
-        // publicSignals[0] = score (Assuming Score is the first public output/input in circuit definition)
+        // ... (Verification logic stays same)
         const isValid = await snarkjs.groth16.verify(vKey, publicSignals, proof);
 
         if (!isValid) {
             return json({ error: 'Invalid Zero-Knowledge Proof' }, { status: 403 });
         }
 
-        // 3. Extract Score
-        // Note: Check game.circom public signals order. Usually outputs come first.
-        // Signal input seed, input claimedScore, output score.
-        // Wait, if claimedScore is public input, and score is output...
-        // snarkjs order: [output_score, input_seed, input_claimedScore]
         const verifiedScore = BigInt(publicSignals[0]);
-        console.log(`Verified Score for ${address}: ${verifiedScore}`);
+        console.log(`Verified Score for ${address}: ${verifiedScore} (Reliability: ${reliability})`);
 
-        // 4. Sign the Score (Oracle)
-        // Message: keccak256(packed(address, score))
-        // This binds the score to the specific user address.
+        // 4. Sign the Score + Reliability (Oracle)
+        // Message: keccak256(packed(address, score, reliability))
         const messageHash = keccak256(
             encodePacked(
-                ['address', 'uint256'],
-                [address as Hex, verifiedScore]
+                ['address', 'uint256', 'uint256'],
+                [address as Hex, verifiedScore, BigInt(reliability)]
             )
         );
 

@@ -41,9 +41,9 @@ contract Leaderboard is Ownable {
         oracle = _oracle;
     }
 
-    function submitScore(uint256 _score, bytes calldata _signature) external {
+    function submitScore(uint256 _score, uint256 _reliability, bytes calldata _signature) external {
         // 1. Verify Signature
-        bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, _score));
+        bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, _score, _reliability));
         bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
         
         address recoveredSigner = ethSignedHash.recover(_signature);
@@ -61,7 +61,7 @@ contract Leaderboard is Ownable {
                 scores.push(PlayerScore({
                     player: msg.sender,
                     score: _score,
-                    reliability: 0,
+                    reliability: _reliability,
                     timestamp: block.timestamp
                 }));
                 playerToIndex[msg.sender] = scores.length;
@@ -69,6 +69,7 @@ contract Leaderboard is Ownable {
                 // Existing player, update record
                 PlayerScore storage record = scores[index - 1];
                 record.score = _score;
+                record.reliability = _reliability;
                 record.timestamp = block.timestamp;
             }
             
