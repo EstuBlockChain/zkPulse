@@ -1,7 +1,7 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { createWalletClient, http, type Hex, keccak256, encodePacked } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import snarkjs from 'snarkjs';
+import * as snarkjs from 'snarkjs';
 import fs from 'fs';
 import path from 'path';
 
