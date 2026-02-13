@@ -2,10 +2,14 @@
 	import { fade } from 'svelte/transition';
 
 	// Props
-	export let scores: { address: string; value: number; reliability: number }[] = [];
+	export let allTimeScores: { address: string; value: number; reliability: number }[] = [];
+	export let monthlyScores: { address: string; value: number; reliability: number }[] = [];
 	export let history: { score: number; timestamp: number }[] = []; // Local history
 
 	let activeTab: 'score' | 'history' = 'score';
+	let timeFilter: 'all' | 'month' = 'all';
+
+	$: currentScores = timeFilter === 'all' ? allTimeScores : monthlyScores;
 
 	function shortenAddress(addr: string) {
 		if (!addr) return '';
@@ -47,8 +51,29 @@
 	<div class="flex flex-col gap-2">
 		{#if activeTab === 'score'}
 			<div in:fade={{ duration: 200 }}>
+				<!-- Time Filter Sub-tabs -->
+				<div class="mb-2 flex justify-center gap-4 text-[10px] tracking-wider">
+					<button
+						class="transition-colors {timeFilter === 'all'
+							? 'font-bold text-cyan-400'
+							: 'text-slate-500 hover:text-cyan-200'}"
+						on:click={() => (timeFilter = 'all')}
+					>
+						ALL TIME
+					</button>
+					<span class="text-slate-700">|</span>
+					<button
+						class="transition-colors {timeFilter === 'month'
+							? 'font-bold text-cyan-400'
+							: 'text-slate-500 hover:text-cyan-200'}"
+						on:click={() => (timeFilter = 'month')}
+					>
+						MONTHLY
+					</button>
+				</div>
+
 				<!-- Show Top 5 from the list passed in (assuming it is sorted) -->
-				{#each scores.slice(0, 5) as item, i}
+				{#each currentScores.slice(0, 5) as item, i}
 					<div class="flex items-center justify-between border-b border-white/5 py-2 text-sm">
 						<div class="flex items-center gap-3">
 							<span class="w-4 text-xs font-bold text-slate-500">#{i + 1}</span>

@@ -26,7 +26,9 @@
 	let spawnLoop: any;
 	let totalGames: string = '--';
 	let onChainBest: number = 0; // Personal Best on Chain
-	let leaderboardData: { address: string; value: number; reliability: number }[] = [];
+
+	let leaderboardAllTime: { address: string; value: number; reliability: number }[] = [];
+	let leaderboardMonthly: { address: string; value: number; reliability: number }[] = [];
 
 	// Wallet State
 	let accountAddress: string | undefined = undefined;
@@ -72,7 +74,7 @@
 		}
 
 		// 2. Check leaderboard data (in case contract mapping is out of sync)
-		const leaderboardEntry = leaderboardData.find(
+		const leaderboardEntry = leaderboardAllTime.find(
 			(p) => p.address.toLowerCase() === address.toLowerCase()
 		);
 
@@ -85,22 +87,39 @@
 
 	async function refreshLeaderboard() {
 		const rawLeaderboard = await fetchLeaderboard();
+		const now = new Date();
+		const currentMonth = now.getMonth();
+		const currentYear = now.getFullYear();
 
-		// Filter to keep only the highest score per player
-		const uniqueScores = new Map<string, { address: string; value: number; reliability: number }>();
+		// Helper: Process list to find max score per player
+		const processScores = (items: typeof rawLeaderboard) => {
+			const uniqueScores = new Map<
+				string,
+				{ address: string; value: number; reliability: number }
+			>();
 
-		rawLeaderboard.forEach((item) => {
-			const address = item.player;
-			const value = Number(item.score);
-			const reliability = Number(item.reliability);
+			items.forEach((item) => {
+				const address = item.player;
+				const value = Number(item.score);
+				const reliability = Number(item.reliability);
 
-			if (!uniqueScores.has(address) || value > uniqueScores.get(address)!.value) {
-				uniqueScores.set(address, { address, value, reliability });
-			}
+				if (!uniqueScores.has(address) || value > uniqueScores.get(address)!.value) {
+					uniqueScores.set(address, { address, value, reliability });
+				}
+			});
+
+			return Array.from(uniqueScores.values()).sort((a, b) => b.value - a.value);
+		};
+
+		// 1. All Time Leaderboard
+		leaderboardAllTime = processScores(rawLeaderboard);
+
+		// 2. Monthly Leaderboard
+		const monthlyItems = rawLeaderboard.filter((item) => {
+			const date = new Date(Number(item.timestamp) * 1000);
+			return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
 		});
-
-		// Format and sort leaderboard (high to low)
-		leaderboardData = Array.from(uniqueScores.values()).sort((a, b) => b.value - a.value);
+		leaderboardMonthly = processScores(monthlyItems);
 	}
 
 	onMount(async () => {
@@ -297,7 +316,7 @@
 			</div>
 
 			<div class="mt-4 flex gap-4 text-xs text-slate-500">
-				<p>GLOBAL GAMES: <span class="text-cyan-600">{leaderboardData.length}</span></p>
+				<p>GLOBAL GAMES: <span class="text-cyan-600">{leaderboardAllTime.length}</span></p>
 				<p>LOCAL RUNS: <span class="text-purple-400">{$userStats.totalGamesPlayed}</span></p>
 			</div>
 		</div>
@@ -472,7 +491,11 @@
 			{/if}
 
 			<div class="mt-8 w-full max-w-md">
-				<Leaderboard scores={leaderboardData} history={$userStats.history} />
+				<Leaderboard
+					allTimeScores={leaderboardAllTime}
+					monthlyScores={leaderboardMonthly}
+					history={$userStats.history}
+				/>
 			</div>
 		</div>
 	{/if}
