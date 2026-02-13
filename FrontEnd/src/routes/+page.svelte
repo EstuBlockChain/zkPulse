@@ -378,6 +378,8 @@
 			// Wait for transaction to be processed by the network
 			if (hash) {
 				await waitForTransactionReceipt(wagmiAdapter.wagmiConfig, { hash: hash as `0x${string}` });
+				// Final buffer to ensure RPC has updated its state
+				await new Promise((r) => setTimeout(r, 1500));
 			}
 
 			// Update leaderboard and stats after successful confirmation
