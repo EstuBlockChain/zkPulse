@@ -386,19 +386,25 @@
 
 			// Wait for transaction to be processed by the network
 			if (hash) {
+				console.log('Waiting for confirmation for hash:', hash);
 				await waitForTransactionReceipt(wagmiAdapter.wagmiConfig, { hash: hash as `0x${string}` });
+				console.log('Transaction confirmed! Waiting 2s for RPC state to sync...');
 				// Final buffer to ensure RPC has updated its state
-				await new Promise((r) => setTimeout(r, 1500));
+				await new Promise((r) => setTimeout(r, 2000));
 			}
 
 			// Update leaderboard and stats after successful confirmation
+			console.log('Refreshing data...');
 			totalGames = await fetchTotalGames();
 			await refreshLeaderboard();
+			console.log('Leaderboard refreshed.');
 
 			// Update personal best
 			if (account.address) {
+				console.log('Updating on-chain best stats...');
 				updateOnChainBest(account.address);
 			}
+			console.log('Publish flow complete.');
 		} catch (error: any) {
 			console.error(error);
 			if (error.message && !error.message.includes('User rejected')) {
