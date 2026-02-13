@@ -6,3 +6,7 @@ declare module 'snarkjs' {
     export const powersOfTau: any;
     export const zkey: any;
 }
+
+declare module 'circomlibjs' {
+    export function buildPoseidon(): Promise<any>;
+}
