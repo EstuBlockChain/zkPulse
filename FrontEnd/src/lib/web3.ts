@@ -1,7 +1,7 @@
 import { createAppKit } from '@reown/appkit'
 import { mainnet, arbitrum, polygon, optimism, base, bsc, avalanche } from '@reown/appkit/networks'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { defineChain } from 'viem'
+import { defineChain, http } from 'viem'
 
 // --- CAMBIO 1: PON TU ID REAL AQUÍ ---
 // Si no tienes uno ahora, usa este TEMPORAL DE PRUEBA: '1b64f89b9a691e81313e617937307045'
@@ -13,7 +13,7 @@ export const zkSysPoBDevnet = defineChain({
     name: 'zkSYS PoB Devnet',
     nativeCurrency: { name: 'Syscoin', symbol: 'TSYS', decimals: 18 },
     rpcUrls: {
-        default: { http: ['https://zkpulse.onrender.com/api/rpc'] }
+        default: { http: ['https://zkpulse.onrender.com/api/rpc', 'https://rpc-pob.dev11.top'] }
     },
     blockExplorers: {
         default: { name: 'zkSYS Explorer', url: 'https://explorer-pob.dev11.top/' }
@@ -52,7 +52,16 @@ export const networks = [zkSysPoBDevnet, syscoinMainnet, syscoinTestnet, mainnet
 
 export const wagmiAdapter = new WagmiAdapter({
     projectId,
-    networks
+    networks,
+    transports: {
+        [zkSysPoBDevnet.id]: http(undefined, {
+            timeout: 60_000,
+            retryCount: 3,
+            retryDelay: 2_000
+        }),
+        [syscoinTestnet.id]: http(),
+        [syscoinMainnet.id]: http()
+    }
 }) as any
 
 // --- CAMBIO 2: EVITAR ERROR DE SSR ---

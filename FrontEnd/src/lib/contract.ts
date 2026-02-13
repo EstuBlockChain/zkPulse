@@ -150,14 +150,27 @@ export async function submitScoreToChain(score: number, signature: string): Prom
     }
 }
 
+// Utility: Retry logic for read operations
+async function retryRead<T>(fn: () => Promise<T>, retries = 2, delay = 1000): Promise<T> {
+    try {
+        return await fn();
+    } catch (error) {
+        if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return retryRead(fn, retries - 1, delay * 2);
+        }
+        throw error;
+    }
+}
+
 export async function fetchLeaderboard(): Promise<PlayerScore[]> {
     try {
-        const result = await readContract(wagmiAdapter.wagmiConfig, {
+        const result = await retryRead(() => readContract(wagmiAdapter.wagmiConfig, {
             address: CONTRACT_CONFIG[zkSysPoBDevnet.id],
             abi: CONTRACT_ABI,
             functionName: 'getLeaderboard',
             chainId: zkSysPoBDevnet.id
-        });
+        }));
         return result as unknown as PlayerScore[];
     } catch (error) {
         console.error('Error reading leaderboard:', error);
@@ -167,12 +180,12 @@ export async function fetchLeaderboard(): Promise<PlayerScore[]> {
 
 export async function fetchTotalGames(): Promise<string> {
     try {
-        const result = await readContract(wagmiAdapter.wagmiConfig, {
+        const result = await retryRead(() => readContract(wagmiAdapter.wagmiConfig, {
             address: CONTRACT_CONFIG[zkSysPoBDevnet.id],
             abi: CONTRACT_ABI,
             functionName: 'getTotalGames',
             chainId: zkSysPoBDevnet.id
-        });
+        }));
         return result.toString();
     } catch (error) {
         console.error('Error reading total games:', error);
@@ -182,13 +195,13 @@ export async function fetchTotalGames(): Promise<string> {
 
 export async function fetchPersonalBest(address: `0x${string}`): Promise<string> {
     try {
-        const result = await readContract(wagmiAdapter.wagmiConfig, {
+        const result = await retryRead(() => readContract(wagmiAdapter.wagmiConfig, {
             address: CONTRACT_CONFIG[zkSysPoBDevnet.id],
             abi: CONTRACT_ABI,
             functionName: 'bestScores',
             args: [address],
             chainId: zkSysPoBDevnet.id
-        });
+        }));
         return result.toString();
     } catch (error) {
         console.error('Error reading personal best:', error);
