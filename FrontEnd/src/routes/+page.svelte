@@ -29,6 +29,7 @@
 
 	let leaderboardAllTime: { address: string; value: number; reliability: number }[] = [];
 	let leaderboardMonthly: { address: string; value: number; reliability: number }[] = [];
+	let leaderboardWeekly: { address: string; value: number; reliability: number }[] = [];
 
 	// Wallet State
 	let accountAddress: string | undefined = undefined;
@@ -120,6 +121,20 @@
 			return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
 		});
 		leaderboardMonthly = processScores(monthlyItems);
+
+		// 3. Weekly Leaderboard
+		// Get Monday of current week
+		const d = new Date(now);
+		const day = d.getDay();
+		const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+		const monday = new Date(d.setDate(diff));
+		monday.setHours(0, 0, 0, 0);
+
+		const weeklyItems = rawLeaderboard.filter((item) => {
+			const date = new Date(Number(item.timestamp) * 1000);
+			return date >= monday;
+		});
+		leaderboardWeekly = processScores(weeklyItems);
 	}
 
 	onMount(async () => {
@@ -494,6 +509,7 @@
 				<Leaderboard
 					allTimeScores={leaderboardAllTime}
 					monthlyScores={leaderboardMonthly}
+					weeklyScores={leaderboardWeekly}
 					history={$userStats.history}
 				/>
 			</div>

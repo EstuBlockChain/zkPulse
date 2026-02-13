@@ -4,12 +4,14 @@
 	// Props
 	export let allTimeScores: { address: string; value: number; reliability: number }[] = [];
 	export let monthlyScores: { address: string; value: number; reliability: number }[] = [];
+	export let weeklyScores: { address: string; value: number; reliability: number }[] = [];
 	export let history: { score: number; timestamp: number }[] = []; // Local history
 
 	let activeTab: 'score' | 'history' = 'score';
-	let timeFilter: 'all' | 'month' = 'all';
+	let timeFilter: 'all' | 'month' | 'week' = 'all';
 
-	$: currentScores = timeFilter === 'all' ? allTimeScores : monthlyScores;
+	$: currentScores =
+		timeFilter === 'all' ? allTimeScores : timeFilter === 'month' ? monthlyScores : weeklyScores;
 
 	function shortenAddress(addr: string) {
 		if (!addr) return '';
@@ -69,6 +71,15 @@
 						on:click={() => (timeFilter = 'month')}
 					>
 						MONTHLY
+					</button>
+					<span class="text-slate-700">|</span>
+					<button
+						class="transition-colors {timeFilter === 'week'
+							? 'font-bold text-cyan-400'
+							: 'text-slate-500 hover:text-cyan-200'}"
+						on:click={() => (timeFilter = 'week')}
+					>
+						WEEKLY
 					</button>
 				</div>
 
