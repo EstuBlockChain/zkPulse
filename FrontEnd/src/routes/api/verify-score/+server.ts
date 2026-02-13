@@ -1,10 +1,8 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
-import { createWalletClient, http, type Hex, keccak256, encodePacked } from 'viem';
+import { type Hex, keccak256, encodePacked } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 // import * as snarkjs from 'snarkjs';
 import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const snarkjs = require('snarkjs');
 import fs from 'fs';
 import path from 'path';
 
@@ -15,6 +13,9 @@ const PRIVATE_KEY = process.env.ORACLE_PRIVATE_KEY || '0x1e2f25281ecd844abb64843
 const account = privateKeyToAccount(PRIVATE_KEY as Hex);
 
 export async function POST({ request }: RequestEvent) {
+    // Lazy load snarkjs to avoid build-time issues with web-worker
+    const require = createRequire(import.meta.url);
+    const snarkjs = require('snarkjs');
     try {
         const body = await request.json();
         const { proof, publicSignals, address } = body;
