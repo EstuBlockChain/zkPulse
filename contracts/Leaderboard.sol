@@ -1,61 +1,55 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-/**
- * @title Leaderboard
- * @dev Stores player scores and reliability, keeping a list of top scores.
- */
-contract Leaderboard {
-    struct PlayerScore {
-        address player;
-        uint256 score;
-        uint256 reliability; // New field: 0-100 representing percentage
-        uint256 timestamp;
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+
+contract Leaderboard is Ownable {
+    using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
+
+    // Only keep best scores on-chain to save gas
+    mapping(address => uint256) public bestScores;
+    
+    // Address of the trusted Oracle (Server)
+    address public oracle;
+
+    // Event for general game history (Cheap, ~2-3k gas)
+    event NewScore(address indexed player, uint256 score); 
+    
+    // Event specific to breaking a record
+    event NewHighScore(address indexed player, uint256 score);
+
+    constructor(address _oracle) Ownable(msg.sender) {
+        oracle = _oracle;
     }
 
-    // Array to store all scores
-    PlayerScore[] public scores;
-
-    // Mapping to check if a user already played (optional, or to update their best score)
-    mapping(address => uint256) public bestScores;
-
-    event NewScore(address indexed player, uint256 score, uint256 reliability);
+    function setOracle(address _oracle) external onlyOwner {
+        oracle = _oracle;
+    }
 
     /**
-     * @dev Submit a new score with reliability.
-     * @param _score The score achieved by the player.
-     * @param _reliability The reliability percentage (0-100).
+     * @dev Submit a new score. Only accepts scores signed by the Oracle.
+     * @param _score The score achieved.
+     * @param _signature The cryptographic signature from the Oracle.
      */
-    function submitScore(uint256 _score, uint256 _reliability) public {
-        require(_score > 0, "Score must be positive");
+    function submitScore(uint256 _score, bytes calldata _signature) external {
+        // 1. Verify Signature
+        // Hash(msg.sender, _score)
+        bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, _score));
+        bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
+        
+        address recoveredSigner = ethSignedHash.recover(_signature);
+        require(recoveredSigner == oracle, "Invalid Oracle Signature");
 
-        // Update personal best
+        // 2. Optimized Storage Logic (Best Score Only)
         if (_score > bestScores[msg.sender]) {
             bestScores[msg.sender] = _score;
+            emit NewHighScore(msg.sender, _score);
         }
-
-        // Add to history
-        scores.push(PlayerScore({
-            player: msg.sender,
-            score: _score,
-            reliability: _reliability,
-            timestamp: block.timestamp
-        }));
-
-        emit NewScore(msg.sender, _score, _reliability);
-    }
-
-    /**
-     * @dev Retrieve all scores. 
-     */
-    function getLeaderboard() public view returns (PlayerScore[] memory) {
-        return scores;
-    }
-    
-    /**
-     * @dev Get total number of games played
-     */
-    function getTotalGames() public view returns (uint256) {
-        return scores.length;
+        
+        // Always emit playing event (for history reconstruction via TheGraph/Indexers)
+        emit NewScore(msg.sender, _score);
     }
 }

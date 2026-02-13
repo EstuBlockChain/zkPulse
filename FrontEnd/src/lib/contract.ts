@@ -3,7 +3,7 @@ import { wagmiAdapter, zkSysPoBDevnet, syscoinTestnet, syscoinMainnet } from './
 
 // Configuración de contratos por red
 export const CONTRACT_CONFIG: Record<number, `0x${string}`> = {
-    [zkSysPoBDevnet.id]: '0x01A7dE356dc745dD48229A3Bf7622100559677ae',
+    [zkSysPoBDevnet.id]: '0x9C55cD4a6fC29Eb9Eeb8365B5089f1482D34Fd56',
 };
 
 // ABI del contrato Leaderboard v2 (con Reliability)
@@ -16,9 +16,9 @@ export const CONTRACT_ABI = [
                 "type": "uint256"
             },
             {
-                "internalType": "uint256",
-                "name": "_reliability",
-                "type": "uint256"
+                "internalType": "bytes",
+                "name": "_signature",
+                "type": "bytes"
             }
         ],
         "name": "submitScore",
@@ -102,7 +102,7 @@ export type PlayerScore = {
     timestamp: bigint;
 };
 
-export async function submitScoreToChain(score: number, reliability: number): Promise<string> {
+export async function submitScoreToChain(score: number, signature: string): Promise<string> {
     try {
         const account = getAccount(wagmiAdapter.wagmiConfig);
 
@@ -129,7 +129,7 @@ export async function submitScoreToChain(score: number, reliability: number): Pr
             address: contractAddress as `0x${string}`,
             abi: CONTRACT_ABI,
             functionName: 'submitScore',
-            args: [BigInt(score), BigInt(reliability)],
+            args: [BigInt(score), signature as `0x${string}`],
             chainId: targetChainId,
         });
 

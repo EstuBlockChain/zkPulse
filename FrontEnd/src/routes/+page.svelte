@@ -13,6 +13,7 @@
 	} from '$lib/contract';
 	import ShareButton from '$lib/components/ShareButton.svelte';
 	import Leaderboard from '$lib/components/Leaderboard.svelte';
+	// Dynamic imports inside functions/onMount to avoid SSR issues with circom/snarkjs
 
 	// -- ESTADO DEL JUEGO --
 	let isPlaying = false;
@@ -26,6 +27,13 @@
 	let spawnLoop: any;
 	let totalGames: string = '--';
 	let onChainBest: number = 0; // Personal Best on Chain
+
+	// -- ZK STATE --
+	let poseidon: any;
+	let gameSeed: bigint = 0n;
+	let stepIndex = 0;
+	const MAX_STEPS = 150;
+	let inputClicks: number[] = [];
 
 	let leaderboardAllTime: { address: string; value: number; reliability: number }[] = [];
 	let leaderboardMonthly: { address: string; value: number; reliability: number }[] = [];
@@ -55,6 +63,7 @@
 		y: number;
 		duration: number;
 		points: number;
+		stepIndex: number; // ZK Step Index
 	};
 
 	let spikes: Spike[] = [];
@@ -154,6 +163,14 @@
 			}
 		});
 
+		// Initialize Poseidon for ZK RNG
+		try {
+			const { buildPoseidon } = await import('circomlibjs');
+			poseidon = await buildPoseidon();
+		} catch (e) {
+			console.error('Failed to load Poseidon:', e);
+		}
+
 		// Fetch initial data
 		await refreshLeaderboard();
 
@@ -178,6 +195,11 @@
 		spikes = [];
 		txHash = null; // Reset transaction hash on new game
 
+		// ZK Reset
+		gameSeed = BigInt(Math.floor(Math.random() * 1000000000));
+		stepIndex = 0;
+		inputClicks = new Array(MAX_STEPS).fill(0);
+
 		sounds.playStart();
 
 		// Timer de cuenta regresiva
@@ -192,19 +214,42 @@
 
 	function spawnSpike() {
 		if (!isPlaying) return;
+		if (stepIndex >= MAX_STEPS) return;
 
-		// Probabilidades según PDF [cite: 174, 175]
-		const rand = Math.random();
+		// Deterministic RNG using Poseidon
+		// Hash(seed, stepIndex)
+		// Note: Poseidon inputs must be BigInts or strings convertible to BigInt
+		// We use stepIndex as the second input
+		let randByte = 0;
+
+		if (poseidon) {
+			const hash = poseidon([gameSeed, BigInt(stepIndex)]);
+			// Convert Field Element to BigInt -> Number
+			// F.toString() gives the decimal string
+			const hashStr = poseidon.F.toString(hash);
+			const hashBn = BigInt(hashStr);
+			// Take lowest 8 bits (same as circuit)
+			randByte = Number(hashBn & 255n);
+		} else {
+			// Fallback if poseidon fails to load (should not happen in prod)
+			randByte = Math.floor(Math.random() * 256);
+		}
+
+		// Circuit Logic:
+		// Green < 153
+		// Yellow < 230
+		// Red >= 230
+
 		let type: Spike['type'];
 		let duration: number;
 		let points: number;
 
-		if (rand < 0.6) {
+		if (randByte < 153) {
 			// 60% Green Spike
 			type = 'green';
 			duration = 1500; // 1.5s
 			points = 1;
-		} else if (rand < 0.9) {
+		} else if (randByte < 230) {
 			// 30% Yellow Spike
 			type = 'yellow';
 			duration = 1000; // 1.0s
@@ -220,8 +265,10 @@
 		const x = 10 + Math.random() * 80;
 		const y = 10 + Math.random() * 80;
 
-		const newSpike: Spike = { id: nextId++, type, x, y, duration, points };
+		const newSpike: Spike = { id: nextId++, type, x, y, duration, points, stepIndex };
 		spikes = [...spikes, newSpike];
+
+		stepIndex++;
 
 		// Eliminar el spike automáticamente si se acaba su tiempo (Miss)
 		setTimeout(() => {
@@ -237,7 +284,12 @@
 		score += spike.points;
 		sounds.playHit(spike.type); // Sonido de impacto
 		removeSpike(spike.id);
-		// Aquí podríamos agregar efectos de sonido o partículas visuales
+
+		// Record Click for ZK
+		// Only set to 1 if within bounds
+		if (spike.stepIndex < MAX_STEPS) {
+			inputClicks[spike.stepIndex] = 1;
+		}
 	}
 
 	// State to track record status for the finished game
@@ -272,10 +324,45 @@
 			return;
 		}
 
-		// 2. Publicar On-chain
+		// 2. Publicar On-chain con ZK
 		isPublishing = true;
 		try {
-			const hash = await submitScoreToChain(score, Math.round(reliabilityScore));
+			// A. Generate ZK Proof
+			// Dynamic import snarkjs
+			// @ts-ignore
+			const snarkjs = await import('snarkjs');
+
+			const inputs = {
+				seed: gameSeed.toString(),
+				claimedScore: score.toString(), // Public Input
+				clicks: inputClicks
+			};
+
+			console.log('Generating ZK Proof...', inputs);
+
+			// Paths to circuit files (Must be in static/ folder)
+			const wasmPath = '/zk/game.wasm';
+			const zkeyPath = '/zk/game_final.zkey';
+
+			const { proof, publicSignals } = await snarkjs.groth16.fullProve(inputs, wasmPath, zkeyPath);
+			console.log('Proof Generated:', publicSignals);
+
+			// B. Verify & Sign with Oracle
+			const verifyRes = await fetch('/api/verify-score', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ proof, publicSignals, address: account.address })
+			});
+
+			if (!verifyRes.ok) {
+				const err = await verifyRes.json();
+				throw new Error(err.error || 'Oracle Verification Failed');
+			}
+
+			const { signature } = await verifyRes.json();
+
+			// C. Submit to Contract
+			const hash = await submitScoreToChain(score, signature);
 			txHash = hash;
 
 			// Determinar explorador según red
