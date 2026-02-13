@@ -335,7 +335,6 @@
 
 			const inputs = {
 				seed: gameSeed.toString(),
-				claimedScore: score.toString(), // Public Input
 				clicks: inputClicks
 			};
 
