@@ -96,8 +96,35 @@
 		onChainBest = maxScore;
 	}
 
-	async function refreshLeaderboard() {
-		const rawLeaderboard = await fetchLeaderboard();
+	async function refreshLeaderboard(expectedAddress?: string, expectedScore?: number) {
+		let rawLeaderboard = await fetchLeaderboard();
+		let attempts = 0;
+		const MAX_ATTEMPTS = 5;
+
+		// If we are looking for a specific update, poll until found or max attempts
+		if (expectedAddress && expectedScore !== undefined) {
+			console.log(`Polling for score ${expectedScore} for ${expectedAddress}...`);
+			while (attempts < MAX_ATTEMPTS) {
+				const found = rawLeaderboard.find(
+					(s) =>
+						s.player.toLowerCase() === expectedAddress.toLowerCase() &&
+						Number(s.score) >= expectedScore
+				);
+
+				if (found) {
+					console.log('New score detected in leaderboard data!');
+					break;
+				}
+
+				attempts++;
+				console.log(
+					`Attempt ${attempts}/${MAX_ATTEMPTS}: New score not yet visible in RPC. Retrying in 2s...`
+				);
+				await new Promise((r) => setTimeout(r, 2000));
+				rawLeaderboard = await fetchLeaderboard();
+			}
+		}
+
 		const now = new Date();
 		const currentMonth = now.getMonth();
 		const currentYear = now.getFullYear();
@@ -394,9 +421,9 @@
 			}
 
 			// Update leaderboard and stats after successful confirmation
-			console.log('Refreshing data...');
+			console.log('Refreshing data (Aggressive sync)...');
 			totalGames = await fetchTotalGames();
-			await refreshLeaderboard();
+			await refreshLeaderboard(account.address, verifiedScore);
 			console.log('Leaderboard refreshed.');
 
 			// Update personal best
