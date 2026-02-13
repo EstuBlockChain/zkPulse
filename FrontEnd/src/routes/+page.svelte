@@ -209,8 +209,8 @@
 			if (timeLeft <= 0) endGame();
 		}, 1000);
 
-		// Loop de generación de Spikes (cada 400ms intentamos crear uno)
-		spawnLoop = setInterval(spawnSpike, 400);
+		// Loop de generación de Spikes (cada 500ms para cubrir 60s con 120 pasos)
+		spawnLoop = setInterval(spawnSpike, 500);
 	}
 
 	function spawnSpike() {
