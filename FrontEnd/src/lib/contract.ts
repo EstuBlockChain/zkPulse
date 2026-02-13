@@ -4,7 +4,7 @@ import { wagmiAdapter, zkSysPoBDevnet, syscoinTestnet, syscoinMainnet } from './
 
 // Configuración de contratos por red
 export const CONTRACT_CONFIG: Record<number, `0x${string}`> = {
-    [zkSysPoBDevnet.id]: '0x9802204171146aF8401447eBe46079f0bD8354Fc',
+    [zkSysPoBDevnet.id]: '0xF01255EEB578Bac15ac55A001EBAA5507e3728d1',
 };
 
 // ABI del contrato Leaderboard v2 (con Reliability)
