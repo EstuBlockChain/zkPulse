@@ -76,4 +76,4 @@ template Game(MAX_STEPS) {
     score <== internalScore[MAX_STEPS];
 }
 
-component main = Game(150);
+component main = Game(120);

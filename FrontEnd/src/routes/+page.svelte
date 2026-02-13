@@ -32,7 +32,7 @@
 	let poseidon: any;
 	let gameSeed: bigint = 0n;
 	let stepIndex = 0;
-	const MAX_STEPS = 150;
+	const MAX_STEPS = 120;
 	let inputClicks: number[] = [];
 
 	let leaderboardAllTime: { address: string; value: number; reliability: number }[] = [];
