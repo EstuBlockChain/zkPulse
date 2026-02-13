@@ -9,7 +9,8 @@
 		submitScoreToChain,
 		fetchLeaderboard,
 		fetchTotalGames,
-		fetchPersonalBest
+		fetchPersonalBest,
+		waitForTransactionReceipt
 	} from '$lib/contract';
 	import ShareButton from '$lib/components/ShareButton.svelte';
 	import Leaderboard from '$lib/components/Leaderboard.svelte';
@@ -374,16 +375,19 @@
 				explorerUrl = 'https://explorer.syscoin.org/tx'; // Fallback to mainnet explorer
 			}
 
-			// Update leaderboard and stats after successful publish
-			setTimeout(async () => {
-				totalGames = await fetchTotalGames();
-				await refreshLeaderboard();
+			// Wait for transaction to be processed by the network
+			if (hash) {
+				await waitForTransactionReceipt(wagmiAdapter.wagmiConfig, { hash: hash as `0x${string}` });
+			}
 
-				// Update personal best
-				if (account.address) {
-					updateOnChainBest(account.address);
-				}
-			}, 5000); // Wait a bit for block propagation
+			// Update leaderboard and stats after successful confirmation
+			totalGames = await fetchTotalGames();
+			await refreshLeaderboard();
+
+			// Update personal best
+			if (account.address) {
+				updateOnChainBest(account.address);
+			}
 		} catch (error: any) {
 			console.error(error);
 			if (error.message && !error.message.includes('User rejected')) {
