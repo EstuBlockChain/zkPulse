@@ -1,15 +1,10 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { type Hex, keccak256, encodePacked } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-// import * as snarkjs from 'snarkjs';
 import { createRequire } from 'module';
-import fs from 'fs';
-import path from 'path';
 import vKey from '$lib/zk/verification_key.json';
 
 // SERVER WALLET (Oracle)
-// GUID: Use a secure environment variable for this in production!
-// For development, we can use a generated one or the user's dev wallet.
 const PRIVATE_KEY = process.env.ORACLE_PRIVATE_KEY || '0x1e2f25281ecd844abb64843d9833efbe36a1ad72af92625641f44ed666444217';
 const account = privateKeyToAccount(PRIVATE_KEY as Hex);
 
