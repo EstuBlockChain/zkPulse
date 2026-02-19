@@ -35,7 +35,6 @@ class SoundManager {
 
         // Configuración por tipo
         if (type === 'green') {
-            // High pitch "coin" like
             osc.type = 'sine';
             osc.frequency.setValueAtTime(800, now);
             osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
@@ -119,6 +118,4 @@ class SoundManager {
         osc.stop(now + 1);
     }
 }
-
-// Singleton export
 export const sounds = new SoundManager();

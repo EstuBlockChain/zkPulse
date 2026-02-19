@@ -4,8 +4,6 @@ import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { defineChain, http } from 'viem'
 
 // --- CAMBIO 1: PON TU ID REAL AQUÍ ---
-// Si no tienes uno ahora, usa este TEMPORAL DE PRUEBA: '1b64f89b9a691e81313e617937307045'
-// (Pero cámbialo pronto porque tiene límites)
 export const projectId = 'c6433317029634d37e2f5da53e1d7617'
 
 export const zkSysPoBDevnet = defineChain({

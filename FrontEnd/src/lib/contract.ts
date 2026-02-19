@@ -1,6 +1,6 @@
 import { getAccount, writeContract, switchChain, readContract, waitForTransactionReceipt } from '@wagmi/core';
 export { waitForTransactionReceipt };
-import { wagmiAdapter, zkSysPoBDevnet, syscoinTestnet, syscoinMainnet } from './web3';
+import { wagmiAdapter, zkSysPoBDevnet } from './web3';
 
 // Configuración de contratos por red
 export const CONTRACT_CONFIG: Record<number, `0x${string}`> = {
