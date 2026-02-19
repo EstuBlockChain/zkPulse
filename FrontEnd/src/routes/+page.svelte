@@ -469,6 +469,9 @@
 				<p>GLOBAL GAMES: <span class="text-cyan-600">{leaderboardAllTime.length}</span></p>
 				<p>LOCAL RUNS: <span class="text-purple-400">{$userStats.totalGamesPlayed}</span></p>
 			</div>
+			<div class="mt-4 flex gap-4 text-xs text-slate-500">
+				<p>Versión: 1.0.2</p>
+			</div>
 		</div>
 
 		<div class="pointer-events-auto flex flex-col items-end gap-2 text-right">
